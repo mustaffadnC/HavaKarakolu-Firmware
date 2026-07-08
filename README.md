@@ -35,6 +35,8 @@ tools/                    yer istasyonu / yardımcı scriptler (python)
 
 ## CubeMX/CubeIDE entegrasyonu (özet)
 
+> **Adım adım tam rehber: [`docs/cubemx-setup.md`](docs/cubemx-setup.md)** — kurulumdan linker ayarına (FLASH=896K, printf float) kadar. PCB bring-up planı: [`docs/bringup.md`](docs/bringup.md).
+
 Bu repo yalnızca taşınabilir `App/` katmanını ve testleri içerir. ST'nin ürettiği `Core/`, `Drivers/`, `Middlewares/` katmanı CubeMX'te bir kez üretilir, sonra `App/` eklenir:
 
 1. **CubeMX** ile yeni proje: STM32F405VGTx, Toolchain = STM32CubeIDE.
@@ -107,13 +109,14 @@ Gereksinim: `gcc` + `cmake`. Bu makinede gcc kuruldu:
 | F3 | Aktüatör/IO sürücüleri (servo, buzzer, fan, lock, battery) | ✅ |
 | F4–F5 | Sağlık/güç + RTOS entegrasyon (filters, system_state, sensor_manager, health/IWDG, app+görevler) | ✅ |
 | **Rev-2 uyarlaması** | board_config v2 (BMP280, pin değişiklikleri, WS2812 çıkarıldı) | ✅ |
-| P2 | BMP280 sürücüsü (rev-2) | ⬜ |
-| P3 | SPI + SD kart + FatFs + storage (log) servisi | ⬜ |
-| P4 | BMI270 vendor lib (Bosch SensorAPI) entegrasyonu | ⬜ |
-| P5–P6 | Görev durum makinesi + uçuş simülatörü ile uçtan uca test | ⬜ |
-| P7 | Config/NV + SD `CONFIG.INI` override | ⬜ |
-| P8 | CubeMX `.ioc` + entegrasyon rehberi v2 | ⬜ |
-| P9 | Donanım bring-up (PCB gelince) | ⬜ |
+| P2 | BMP280 sürücüsü (datasheet-birebir kompanzasyon testli) | ✅ |
+| P3 | SPI + SD kart + FatFs + storage (log) servisi (güç-kesintisi testli) | ✅ |
+| P4 | BMI270 vendor lib (Bosch SensorAPI v2.86.1, repoda) | ✅ |
+| P5 | Görev durum makinesi (parametrik, %100 durum kapsamalı test) | ✅ |
+| P6 | Uçuş simülatörü + uçtan uca sistem testi (`test_flight_e2e`) | ✅ |
+| P7 | Config/NV flash journal + SD `CONFIG.INI` override | ✅ |
+| P8 | Entegrasyon rehberi v2 (`docs/cubemx-setup.md`) ✅ / `.ioc` üretimi | 🔶 CubeIDE'de manuel |
+| P9 | Donanım bring-up (PCB gelince) — plan: `docs/bringup.md` | ⬜ donanım bekliyor |
 
 ---
 
