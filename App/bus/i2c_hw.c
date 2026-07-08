@@ -1,5 +1,7 @@
 #include "bus/i2c_hw.h"
 
+#include <stddef.h>
+
 #if !defined(HK_HOST)
 
 #include <stdbool.h>

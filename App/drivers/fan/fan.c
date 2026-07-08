@@ -1,5 +1,7 @@
 #include "drivers/fan/fan.h"
 
+#include <stddef.h>
+
 bool hk_fan_thermostat(float temp_c, float on_above_c, float off_below_c, bool current)
 {
     if (current) {

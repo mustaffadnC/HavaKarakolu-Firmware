@@ -1,5 +1,7 @@
 #include "drivers/battery/battery.h"
 
+#include <stddef.h>
+
 #include "common/units.h"
 
 float hk_battery_voltage(uint16_t adc_raw, float vref, float full_scale,

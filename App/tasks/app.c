@@ -1,5 +1,7 @@
 #include "tasks/app.h"
 
+#include <stddef.h>
+
 #if !defined(HK_HOST)
 
 #include "FreeRTOS.h"

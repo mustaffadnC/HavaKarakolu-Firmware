@@ -1,5 +1,7 @@
 #include "services/health/health.h"
 
+#include <stddef.h>
+
 bool hk_health_all_alive(uint32_t kicked, uint32_t expected)
 {
     return (kicked & expected) == expected;

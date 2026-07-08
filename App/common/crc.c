@@ -37,3 +37,28 @@ uint16_t hk_crc16_ccitt(const uint8_t *data, size_t len)
     }
     return crc;
 }
+
+uint16_t hk_crc16_xmodem(const uint8_t *data, size_t len)
+{
+    uint16_t crc = 0x0000;
+    for (size_t i = 0; i < len; ++i) {
+        crc = hk_crc16_ccitt_update(crc, data[i]);
+    }
+    return crc;
+}
+
+uint8_t hk_crc7_sd(const uint8_t *data, size_t len)
+{
+    uint8_t crc = 0;
+    for (size_t i = 0; i < len; ++i) {
+        crc ^= data[i];
+        for (uint8_t bit = 0; bit < 8; ++bit) {
+            if (crc & 0x80U) {
+                crc = (uint8_t)((crc << 1) ^ (0x09U << 1));
+            } else {
+                crc = (uint8_t)(crc << 1);
+            }
+        }
+    }
+    return (uint8_t)(crc | 0x01U);
+}

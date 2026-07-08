@@ -1,5 +1,7 @@
 #include "drivers/sht4x/sht4x.h"
 
+#include <stddef.h>
+
 #include "common/crc.h"
 #include "common/units.h"
 

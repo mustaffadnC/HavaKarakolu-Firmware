@@ -1,5 +1,7 @@
 #include "bus/i2c_scan.h"
 
+#include <stddef.h>
+
 #include "common/log.h"
 
 int hk_i2c_scan(const hk_i2c_bus_t *bus, const char *bus_name)

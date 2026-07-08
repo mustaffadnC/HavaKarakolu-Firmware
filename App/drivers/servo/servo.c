@@ -1,5 +1,7 @@
 #include "drivers/servo/servo.h"
 
+#include <stddef.h>
+
 #include "common/units.h"
 
 uint16_t hk_servo_angle_to_us(float deg, uint16_t min_us, uint16_t max_us)

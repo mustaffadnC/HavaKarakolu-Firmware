@@ -1,5 +1,7 @@
 #include "drivers/bmp581/bmp581.h"
 
+#include <stddef.h>
+
 #include "common/hk_time.h"
 #include "common/units.h"
 

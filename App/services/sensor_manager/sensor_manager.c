@@ -1,5 +1,7 @@
 #include "services/sensor_manager/sensor_manager.h"
 
+#include <stddef.h>
+
 #if !defined(HK_HOST)
 
 #include "bsp/board_config.h"

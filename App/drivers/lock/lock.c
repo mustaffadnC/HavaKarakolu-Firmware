@@ -1,5 +1,7 @@
 #include "drivers/lock/lock.h"
 
+#include <stddef.h>
+
 #if !defined(HK_HOST)
 
 static void apply(hk_lock_t *dev)
