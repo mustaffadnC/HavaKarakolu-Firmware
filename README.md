@@ -1,12 +1,14 @@
-# Ülgen ÇARGE — Hava Karakolu Firmware
+# Ülgen ÇARGE — Modüler Kapsül Firmware (Rev-2)
 
-STM32F405VGTx tabanlı, model uçağa bağlıyken 28V busundan beslenen; **servo + solenoid kilit** ile uçaktan ayrılıp kendi **Li-ion** paketiyle **otonom hava istasyonu** olarak çalışmaya devam eden payload kartının gömülü yazılımı.
+STM32F405VGTx tabanlı modüler kapsül kartının gömülü yazılımı. Kapsül; taşıyıcıdan **servo + solenoid** ile ayrılır, iniş boyunca ve yerde ortam verisini (2× SHT4x sıcaklık/nem, BMP280 basınç/irtifa, BMI270 IMU, MAX-M10S GPS) ölçer, **SD karta loglar** ve 2 fan ile termal kontrol yapar. Güç: Li-ion paket (PTC + ters-polarite koruması → 5V buck → 3.3V LDO; servo için ayrı 5V buck).
 
 - **MCU:** STM32F405VGTx (Cortex-M4F @168 MHz, 1MB Flash, 192KB SRAM + 64KB CCM)
 - **RTOS / Dil:** FreeRTOS + C (C11)
 - **Araç zinciri:** STM32CubeIDE + CubeMX (HAL). Host birim testleri için gcc + CMake.
+- **Veri çıkışı:** SD kart (SPI1 + FatFs). Telemetri radyosu yok.
 
-> Tam mimari ve yol haritası: `../.claude/plans/bu-sistemin-yaz-l-m-yaz-lacak-shimmering-yeti.md`
+> Donanım rev-2 pin haritasının tek doğru kaynağı: `App/bsp/board_config.h`
+> Elektronik ekibine açık sorular: `docs/ee-questions.md`
 
 ---
 
@@ -17,7 +19,7 @@ App/                      ← bu repoda yazılan, taşınabilir uygulama kodu
   bsp/                    board pin/clock soyutlaması
   bus/                    i2c_bus_if, uart_if (arayüzler) + HW/SW implementasyonları
   common/                 crc, ringbuf, units, log (saf C, host-testable)
-  drivers/                bmi270, bmp581, sht4x, gps_ublox, ws2812, servo, fan, buzzer, lock, battery
+  drivers/                bmi270, bmp280, sht4x, gps_ublox, sd_spi, servo, fan, buzzer, lock, battery
   services/               sensor_manager, telemetry, command, mission, health, config, storage
   tasks/                  FreeRTOS görev tanımları + app_init
 Core/ Drivers/ Middlewares/   ← CubeMX/CubeIDE üretir (bu repoda YOK; aşağıdaki entegrasyon)
@@ -36,15 +38,16 @@ tools/                    yer istasyonu / yardımcı scriptler (python)
 Bu repo yalnızca taşınabilir `App/` katmanını ve testleri içerir. ST'nin ürettiği `Core/`, `Drivers/`, `Middlewares/` katmanı CubeMX'te bir kez üretilir, sonra `App/` eklenir:
 
 1. **CubeMX** ile yeni proje: STM32F405VGTx, Toolchain = STM32CubeIDE.
-2. **Clock:** HSE 8 MHz kristal → PLL → SYSCLK 168 MHz (APB1 42, APB2 84).
+2. **Clock:** HSE 8 MHz kristal (⚠️ Y2 değeri teyit bekliyor — `docs/ee-questions.md` S2) → PLL → SYSCLK 168 MHz (APB1 42, APB2 84).
 3. **Çevre birimleri** (pin haritası `App/bsp/board_config.h` ile bire bir):
    - USART1 (PA9/PA10) — GPS, DMA RX + global interrupt, IDLE açık
    - I2C1 (PB6/PB7), I2C2 (PB10/PB11) — DMA, Fast Mode 400 kHz
+   - SPI1 (PA5 SCK / PA6 MISO / PA7 MOSI) — SD kart; PA4 = GPIO output (soft CS, init HIGH)
    - TIM1_CH1 (PA8) — servo PWM 50 Hz
-   - TIM5_CH2/CH3 (PA1/PA2) — WS2812, DMA
-   - TIM12_CH1 (PB14) — buzzer
-   - ADC1_IN10 (PC0) — BAT_SENSE
-   - GPIO: PC13 (LOCK_CTRL, out), PB12/PB13 (FAN1/FAN2, out), PB8/PB9 (bit-bang I2C, OD)
+   - TIM3_CH2 (PB5) — buzzer
+   - ADC1_IN10 (PC0) — BAT_TEST
+   - GPIO: PB0 (Solenoid_Tetik, out, **init LOW**), PB12/PB15 (FAN1/FAN2, out), PB8/PB9 (bit-bang I2C, OD), PC4 (EXTI4, BMI270 INT — opsiyonel)
+   - **PB13/PB14 hiçbir şeye atanmaz** (şemada SWD netleri görünüyor — `docs/ee-questions.md` S1)
    - SYS: SWD (PA13/PA14), Timebase = TIM (SysTick'i FreeRTOS'a bırak)
 4. **Middlewares:** FreeRTOS (CMSIS-RTOS v2).
 5. Üretilen projeye `App/` klasörünü ekle; Include path'lere `App/**` dizinlerini ekle.
@@ -59,7 +62,7 @@ Bu repo yalnızca taşınabilir `App/` katmanını ve testleri içerir. ST'nin �
    ```
    Log çıkışı için `hk_log_init(<sink>, HK_LOG_INFO)` çağır (RTT veya debug UART sink).
 
-> CubeMX handle isimleri kod tarafında beklenen adlarla eşleşmeli: `hi2c1`, `hi2c2`, `huart1`, `htim1`, `htim5`, `htim12`, `hadc1`. Farklıysa `App/bsp/board_config.h` güncellenir.
+> CubeMX handle isimleri kod tarafında beklenen adlarla eşleşmeli: `hi2c1`, `hi2c2`, `huart1`, `htim1`, `htim3`, `hspi1`, `hadc1`, `hiwdg`. Farklıysa `App/bsp/board_config.h` güncellenir.
 
 ---
 
@@ -100,19 +103,27 @@ Gereksinim: `gcc` + `cmake`. Bu makinede gcc kuruldu:
 |---|---|---|
 | F0 | İskelet + ortak altyapı (crc/ringbuf/units/log, bus arayüzleri, board_config, host test harness) | ✅ |
 | F1 | Bus bring-up (I2C HW/SW, UART DMA, i2c_scan) | ✅ |
-| F2 | Sensör sürücüleri (sht4x, bmp581, gps/nmea, bmi270-wrapper) | ✅ |
-| F3 | Aktüatör/IO sürücüleri (servo, buzzer, fan, lock, battery, ws2812) | ✅ |
+| F2 | Sensör sürücüleri (sht4x, baro, gps/nmea, bmi270-wrapper) | ✅ |
+| F3 | Aktüatör/IO sürücüleri (servo, buzzer, fan, lock, battery) | ✅ |
 | F4–F5 | Sağlık/güç + RTOS entegrasyon (filters, system_state, sensor_manager, health/IWDG, app+görevler) | ✅ |
-| F6–F7 | Telemetri + görev makinesi | ⬜ |
-| F8–F10 | Config/NV + sağlamlık + dokümantasyon | ⬜ |
+| **Rev-2 uyarlaması** | board_config v2 (BMP280, pin değişiklikleri, WS2812 çıkarıldı) | ✅ |
+| P2 | BMP280 sürücüsü (rev-2) | ⬜ |
+| P3 | SPI + SD kart + FatFs + storage (log) servisi | ⬜ |
+| P4 | BMI270 vendor lib (Bosch SensorAPI) entegrasyonu | ⬜ |
+| P5–P6 | Görev durum makinesi + uçuş simülatörü ile uçtan uca test | ⬜ |
+| P7 | Config/NV + SD `CONFIG.INI` override | ⬜ |
+| P8 | CubeMX `.ioc` + entegrasyon rehberi v2 | ⬜ |
+| P9 | Donanım bring-up (PCB gelince) | ⬜ |
 
 ---
 
-## Donanım bulguları (bring-up öncesi netlenmeli)
+## Donanım bulguları (rev-2 — bring-up öncesi netlenmeli)
 
-1. **I2C1 pull-up'ları** (BMI270/BMP581) şemada görünmedi → yoksa bu iki sensör çalışmaz. İlk `i2cscan` ile doğrula.
-2. **FAN1/FAN2 (PB12/PB13)** timer OC kanalı yok → varsayılan on/off termostat; değişken hız gerekirse SW PWM/pin değişimi.
-3. **WS2812 D6** data 3.3V (level-shift yok) → güvenilirlik gözlenecek.
-4. **Telemetri radyosu / SD yok** → transport/storage soyutlandı; donanım eklenince bağlanır.
-5. **Ayrılma teyit switch'i yok** → boş GPIO'ya mikro-switch önerilir.
-6. **Solenoid fail-safe polaritesi** (enerji=kilit/aç) doğrulanacak.
+Tam liste ve elektronik ekibine sorular: **`docs/ee-questions.md`**. Öne çıkanlar:
+
+1. **⚠️ SWD şüphesi (KRİTİK):** şemada SWDIO/SWCLK, PB13/PB14 (pin 52/53) üzerinde görünüyor; STM32'de SWD PA13/PA14'te sabittir. Doğruysa kart ST-Link ile programlanamaz → kurtarma: BOOT0=1 + sistem bootloader (USART3, PB10/PB11) veya bodge tel.
+2. **Kristal Y2 frekansı** şemada okunamadı → saat ağacı 8 MHz varsayıyor, teyit şart.
+3. **Solenoid fail-safe polaritesi** (enerjisiz = kilitli mi?) doğrulanacak; PB0 reset'te LOW = enerjisiz.
+4. **FAN1/FAN2 (PB12/PB15)** timer OC kanalı yok → on/off termostat.
+5. **I2C1 pull-up'ları** rev-2'de mevcut (R10/R11 4.7K) ✓ — `i2cscan` ile yine de doğrulanacak.
+6. **Ayrılma teyit switch'i yok** → boş GPIO'ya mikro-switch önerilir.

@@ -37,17 +37,13 @@
 #define HK_BATT_EMA_ALPHA       0.2f
 #define HK_BATT_LOW_SOC         0.15f   /* enter power-save below this */
 
-/* ---- WS2812 timing ticks (TIM5 @84 MHz, ARR=104, 1.25 µs bit) ---- */
-#define HK_WS2812_HI_TICKS      58
-#define HK_WS2812_LO_TICKS      29
-
 /* ---- Servo pulse range (µs) ---- */
 #define HK_SERVO_MIN_US         1000
 #define HK_SERVO_MAX_US         2000
 #define HK_SERVO_RELEASE_DEG    180.0f
 #define HK_SERVO_HOLD_DEG       0.0f
 
-/* ---- Buzzer timer input clock (TIM12 on APB1 -> 84 MHz) ---- */
+/* ---- Buzzer timer input clock (TIM3 on APB1 -> 84 MHz) ---- */
 #define HK_BUZZER_TIMER_CLK_HZ  84000000u
 
 #endif /* HK_APP_CONFIG_H */

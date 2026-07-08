@@ -14,12 +14,13 @@ extern "C" {
 
 /* Sensor presence/health bit flags (system_state.sensor_ok). */
 typedef enum {
-    HK_SENSOR_BMP581 = 1u << 0,
+    HK_SENSOR_BARO   = 1u << 0,   /* BMP280 on rev-2 boards */
     HK_SENSOR_SHT1   = 1u << 1,
     HK_SENSOR_SHT2   = 1u << 2,
     HK_SENSOR_BMI270 = 1u << 3,
     HK_SENSOR_GPS    = 1u << 4,
-    HK_SENSOR_BATT   = 1u << 5
+    HK_SENSOR_BATT   = 1u << 5,
+    HK_SENSOR_SD     = 1u << 6    /* SD card mounted and writable */
 } hk_sensor_flag_t;
 
 /* Central, mutex-protected snapshot of everything the system knows. */

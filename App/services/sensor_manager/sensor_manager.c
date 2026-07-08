@@ -18,8 +18,9 @@ hk_status_t hk_sensors_init(hk_sensor_mgr_t *m,
     m->baro_ref_pa = HK_STD_PRESSURE_PA;
     hk_comp_filter_init(&m->attitude, 0.98f);
 
-    hk_status_t bmp = hk_bmp581_init(&m->bmp, i2c_main, HK_ADDR_BMP581);
-    hk_state_set_sensor_ok(HK_SENSOR_BMP581, bmp == HK_OK);
+    /* TODO(P2): rev-2 board carries a BMP280 -- replace with hk_bmp280 driver. */
+    hk_status_t bmp = hk_bmp581_init(&m->bmp, i2c_main, HK_ADDR_BMP280);
+    hk_state_set_sensor_ok(HK_SENSOR_BARO, bmp == HK_OK);
 
     (void)hk_sht4x_init(&m->sht1, i2c_sht1, HK_ADDR_SHT4X, "SHT1");
     (void)hk_sht4x_init(&m->sht2, i2c_sht2, HK_ADDR_SHT4X, "SHT2");
@@ -62,7 +63,7 @@ void hk_sensors_sample_env(hk_sensor_mgr_t *m)
     if (s2_ok)  { s->temp_sht2_c = t2; s->rh_sht2 = h2; }
     hk_state_unlock();
 
-    hk_state_set_sensor_ok(HK_SENSOR_BMP581, bmp_ok);
+    hk_state_set_sensor_ok(HK_SENSOR_BARO, bmp_ok);
     hk_state_set_sensor_ok(HK_SENSOR_SHT1, s1_ok);
     hk_state_set_sensor_ok(HK_SENSOR_SHT2, s2_ok);
 }

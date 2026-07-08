@@ -50,41 +50,19 @@ void hk_app_init(void)
     /* actuators */
     hk_servo_init(&g_app.servo, &htim1, HK_SERVO_TIM_CHANNEL,
                   HK_SERVO_MIN_US, HK_SERVO_MAX_US);
-    hk_buzzer_init(&g_app.buzzer, &htim12, HK_BUZZER_TIM_CHANNEL,
+    hk_buzzer_init(&g_app.buzzer, &htim3, HK_BUZZER_TIM_CHANNEL,
                    HK_BUZZER_TIMER_CLK_HZ);
     hk_fan_init(&g_app.fan1, HK_FAN1_GPIO_PORT, HK_FAN1_GPIO_PIN, true);
     hk_fan_init(&g_app.fan2, HK_FAN2_GPIO_PORT, HK_FAN2_GPIO_PIN, true);
-    /* Fail-safe: start LOCKED. engaged_state polarity MUST be confirmed. */
+    /* Fail-safe: start LOCKED. engaged_state polarity MUST be confirmed
+     * against the solenoid mechanics (docs/ee-questions.md Q3). */
     hk_lock_init(&g_app.lock, HK_LOCK_GPIO_PORT, HK_LOCK_GPIO_PIN, GPIO_PIN_SET, true);
-    hk_ws2812_init(&g_app.led0, &htim5, HK_WS2812_0_CHANNEL,
-                   HK_WS2812_HI_TICKS, HK_WS2812_LO_TICKS);
-    hk_ws2812_init(&g_app.led1, &htim5, HK_WS2812_1_CHANNEL,
-                   HK_WS2812_HI_TICKS, HK_WS2812_LO_TICKS);
 
     hk_servo_set_angle(&g_app.servo, HK_SERVO_HOLD_DEG);
 
     hk_health_init(&hiwdg, HK_TASK_IMU | HK_TASK_ENV | HK_TASK_GPS | HK_TASK_CONTROL);
 
     HK_LOGI("app", "init complete, last reset = %s", hk_health_reset_reason());
-}
-
-/* ----------------------------------------------------------- LED status --- */
-
-static void status_led(hk_mission_state_t m)
-{
-    uint8_t r = 0, g = 0, b = 0;
-    switch (m) {
-    case HK_MISSION_BOOT:
-    case HK_MISSION_SELFTEST: r = 8;  g = 8;            break; /* yellow */
-    case HK_MISSION_ATTACHED: g = 10;                   break; /* green  */
-    case HK_MISSION_ARMED:    r = 16; g = 8;            break; /* amber  */
-    case HK_MISSION_RELEASE:
-    case HK_MISSION_DESCENT:  b = 16;                   break; /* blue   */
-    case HK_MISSION_LANDED:   g = 16;                   break;
-    case HK_MISSION_RECOVERY: r = 24;                   break; /* red    */
-    default:                                            break;
-    }
-    hk_ws2812_set(&g_app.led0, r, g, b);
 }
 
 /* -------------------------------------------------------------- tasks ----- */
@@ -134,7 +112,6 @@ static void task_control(void *arg)
     (void)arg;
     TickType_t last = xTaskGetTickCount();
     uint32_t   tick = 0;
-    hk_mission_state_t led_shown = HK_MISSION_COUNT;
     for (;;) {
         hk_system_state_t st;
         hk_state_get(&st);
@@ -158,12 +135,6 @@ static void task_control(void *arg)
                 hk_state_unlock();
                 hk_state_set_sensor_ok(HK_SENSOR_BATT, true);
             }
-        }
-
-        /* update status LED only on mission change */
-        if (st.mission != led_shown) {
-            status_led(st.mission);
-            led_shown = st.mission;
         }
 
         hk_health_kick(HK_TASK_CONTROL);

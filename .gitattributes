@@ -1,0 +1,10 @@
+# Normalize line endings: repo stores LF, checkout uses platform default
+* text=auto
+
+# Windows scripts stay CRLF on checkout
+*.ps1 text eol=crlf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.ioc text

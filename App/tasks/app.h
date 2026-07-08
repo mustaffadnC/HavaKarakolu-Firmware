@@ -14,7 +14,6 @@
 #include "drivers/gps_ublox/gps_ublox.h"
 #include "drivers/lock/lock.h"
 #include "drivers/servo/servo.h"
-#include "drivers/ws2812/ws2812.h"
 #include "services/sensor_manager/sensor_manager.h"
 
 #ifdef __cplusplus
@@ -40,7 +39,6 @@ typedef struct {
     hk_buzzer_t  buzzer;
     hk_fan_t     fan1, fan2;
     hk_lock_t    lock;
-    hk_ws2812_t  led0, led1;
 } hk_app_t;
 
 extern hk_app_t g_app;
