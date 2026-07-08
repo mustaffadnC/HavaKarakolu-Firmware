@@ -1,0 +1,30 @@
+# Build outputs
+/build/
+tests/host/build/
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+*.exe
+*.dll
+
+# Python
+__pycache__/
+*.pyc
+
+# STM32CubeIDE
+/Debug/
+/Release/
+.cproject
+.project
+.settings/
+/.metadata/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,28 @@
+name: host-tests
+
+# Builds and runs the pure-logic host unit tests on Linux, where execution is
+# not gated by Windows Smart App Control. Gives reproducible "green" on every
+# push (CRC, ring buffer, SHT4x parse, NMEA parser, actuator math).
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y cmake gcc
+
+      - name: Configure
+        run: cmake -B tests/host/build -S tests/host
+
+      - name: Build
+        run: cmake --build tests/host/build
+
+      - name: Test
+        run: ctest --test-dir tests/host/build --output-on-failure
