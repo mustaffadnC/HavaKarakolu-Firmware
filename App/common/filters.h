@@ -24,6 +24,23 @@ void hk_comp_filter_init(hk_comp_filter_t *f, float alpha);
 void hk_comp_filter_update(hk_comp_filter_t *f, const hk_vec3f *accel,
                            const hk_vec3f *gyro, float dt);
 
+/*
+ * Low-pass filtered derivative: vertical speed from baro altitude samples.
+ * y' = (x - x_prev) / dt, smoothed with a single-pole IIR (alpha in (0,1];
+ * smaller alpha = smoother/slower). First sample initializes the state
+ * without producing a spike. Pure/host-testable.
+ */
+typedef struct {
+    float value;      /* filtered derivative (units/s) */
+    float prev_x;
+    float alpha;
+    int   primed;
+} hk_deriv_lpf_t;
+
+void  hk_deriv_lpf_init(hk_deriv_lpf_t *f, float alpha);
+/* Feed one sample; returns the filtered derivative. dt must be > 0. */
+float hk_deriv_lpf_update(hk_deriv_lpf_t *f, float x, float dt);
+
 #ifdef __cplusplus
 }
 #endif

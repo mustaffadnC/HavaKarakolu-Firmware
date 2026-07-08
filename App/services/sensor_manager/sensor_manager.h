@@ -26,6 +26,7 @@ typedef struct {
     hk_sht4x_t       sht2;
     hk_bmi270_t      imu;
     hk_comp_filter_t attitude;
+    hk_deriv_lpf_t   vspeed;      /* d(alt)/dt at the env task rate */
     float            baro_ref_pa;
 } hk_sensor_mgr_t;
 
@@ -40,8 +41,9 @@ hk_status_t hk_sensors_init(hk_sensor_mgr_t *m,
 void hk_sensors_set_baro_ref(hk_sensor_mgr_t *m);
 
 /* Read BMP280 + both SHT4x and publish to system_state (blocks tens of ms,
- * yielding via the RTOS-aware delay). */
-void hk_sensors_sample_env(hk_sensor_mgr_t *m);
+ * yielding via the RTOS-aware delay). dt_s = env task period in seconds,
+ * used for the vertical-speed derivative. */
+void hk_sensors_sample_env(hk_sensor_mgr_t *m, float dt_s);
 
 /* Read BMI270, run the complementary filter (dt seconds), publish attitude. */
 void hk_sensors_sample_imu(hk_sensor_mgr_t *m, float dt);

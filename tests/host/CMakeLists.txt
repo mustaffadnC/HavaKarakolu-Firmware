@@ -53,10 +53,13 @@ add_executable(test_bmi270  test_bmi270.c
                                            ${APP_DIR}/drivers/bmi270/vendor/bmi270.c)
 target_compile_definitions(test_bmi270 PRIVATE HK_USE_BMI270=1)
 target_include_directories(test_bmi270 PRIVATE ${APP_DIR}/drivers/bmi270/vendor)
+add_executable(test_mission test_mission.c
+                                           ${APP_DIR}/services/mission/mission.c
+                                           ${APP_DIR}/common/filters.c)
 
 # Math (powf) needs libm on some toolchains.
 foreach(t test_crc test_ringbuf test_sht4x test_gps test_actuators test_services
-          test_bmp280 test_sd_spi test_storage test_bmi270)
+          test_bmp280 test_sd_spi test_storage test_bmi270 test_mission)
     target_link_libraries(${t} m)
     add_test(NAME ${t} COMMAND ${t})
 endforeach()

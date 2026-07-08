@@ -31,6 +31,7 @@ typedef struct {
     float temp_sht2_c, rh_sht2;
     float pressure_pa;
     float altitude_m;       /* baro, relative to baro_ref */
+    float vspeed_ms;        /* filtered vertical speed, + = up */
 
     /* inertial */
     hk_vec3f accel;         /* m/s^2 */
@@ -46,6 +47,7 @@ typedef struct {
 
     /* mission / health */
     hk_mission_state_t mission;
+    uint8_t            buzzer_pattern;  /* hk_buzzer_pattern_t (mission out) */
     uint32_t           sensor_ok;   /* bitmask of hk_sensor_flag_t */
     uint32_t           uptime_ms;
 } hk_system_state_t;

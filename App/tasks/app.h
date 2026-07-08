@@ -16,6 +16,7 @@
 #include "drivers/lock/lock.h"
 #include "drivers/sd_spi/sd_spi.h"
 #include "drivers/servo/servo.h"
+#include "services/mission/mission.h"
 #include "services/sensor_manager/sensor_manager.h"
 #include "services/storage/storage.h"
 
@@ -42,6 +43,9 @@ typedef struct {
     /* storage (SD card logging) */
     hk_sd_t      sd;
     hk_storage_t storage;
+
+    /* mission state machine */
+    hk_mission_t mission;
 
     /* actuators */
     hk_servo_t   servo;

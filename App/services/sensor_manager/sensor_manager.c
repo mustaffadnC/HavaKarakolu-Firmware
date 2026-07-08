@@ -19,6 +19,7 @@ hk_status_t hk_sensors_init(hk_sensor_mgr_t *m,
     }
     m->baro_ref_pa = HK_STD_PRESSURE_PA;
     hk_comp_filter_init(&m->attitude, 0.98f);
+    hk_deriv_lpf_init(&m->vspeed, 0.3f);
 
     hk_status_t bmp = hk_bmp280_init(&m->bmp, i2c_main, HK_ADDR_BMP280);
     hk_state_set_sensor_ok(HK_SENSOR_BARO, bmp == HK_OK);
@@ -43,11 +44,13 @@ void hk_sensors_set_baro_ref(hk_sensor_mgr_t *m)
     }
 }
 
-void hk_sensors_sample_env(hk_sensor_mgr_t *m)
+void hk_sensors_sample_env(hk_sensor_mgr_t *m, float dt_s)
 {
     float t_bmp = 0, p = 0, alt = 0;
     bool  bmp_ok = (hk_bmp280_read_altitude(&m->bmp, m->baro_ref_pa,
                                             &t_bmp, &p, &alt) == HK_OK);
+    float vs = bmp_ok ? hk_deriv_lpf_update(&m->vspeed, alt, dt_s)
+                      : m->vspeed.value;
 
     /* SHT4x: trigger both, wait once, fetch both. */
     bool s1_trig = (hk_sht4x_trigger(&m->sht1, 0) == HK_OK);
@@ -59,7 +62,8 @@ void hk_sensors_sample_env(hk_sensor_mgr_t *m)
     bool  s2_ok = s2_trig && (hk_sht4x_fetch(&m->sht2, &t2, &h2) == HK_OK);
 
     hk_system_state_t *s = hk_state_lock();
-    if (bmp_ok) { s->temp_bmp_c = t_bmp; s->pressure_pa = p; s->altitude_m = alt; }
+    if (bmp_ok) { s->temp_bmp_c = t_bmp; s->pressure_pa = p; s->altitude_m = alt;
+                  s->vspeed_ms = vs; }
     if (s1_ok)  { s->temp_sht1_c = t1; s->rh_sht1 = h1; }
     if (s2_ok)  { s->temp_sht2_c = t2; s->rh_sht2 = h2; }
     hk_state_unlock();

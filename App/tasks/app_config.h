@@ -8,6 +8,7 @@
 #define HK_CONTROL_PERIOD_MS    100
 #define HK_HEALTH_PERIOD_MS     100
 #define HK_STORAGE_PERIOD_MS    100
+#define HK_MISSION_PERIOD_MS    50
 
 /* ---- Task priorities (higher = more urgent; idle = 0) ---- */
 #define HK_PRIO_IMU             3
@@ -25,6 +26,7 @@
 #define HK_STACK_CONTROL        384
 #define HK_STACK_HEALTH         256
 #define HK_STACK_STORAGE        768    /* FatFs path buffers on this stack */
+#define HK_STACK_MISSION        384
 
 /* ---- Storage / SD logging ---- */
 #define HK_STORAGE_QUEUE_BYTES  4096   /* record queue (power of two) */
