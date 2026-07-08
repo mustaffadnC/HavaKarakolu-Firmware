@@ -7,14 +7,17 @@
 
 #include "bus/i2c_hw.h"
 #include "bus/i2c_sw.h"
+#include "bus/spi_hw.h"
 #include "bus/uart_dma.h"
 #include "drivers/battery/battery.h"
 #include "drivers/buzzer/buzzer.h"
 #include "drivers/fan/fan.h"
 #include "drivers/gps_ublox/gps_ublox.h"
 #include "drivers/lock/lock.h"
+#include "drivers/sd_spi/sd_spi.h"
 #include "drivers/servo/servo.h"
 #include "services/sensor_manager/sensor_manager.h"
+#include "services/storage/storage.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +29,8 @@ typedef struct {
     hk_i2c_hw_t   i2c1_hw, i2c2_hw;
     hk_i2c_sw_t   swi2c_hw;
     hk_i2c_bus_t  i2c1, i2c2, swi2c;
+    hk_spi_hw_t   spi1_hw;
+    hk_spi_bus_t  spi1;
     hk_uart_dma_t gps_uart_dma;
     hk_uart_t     gps_uart;
 
@@ -33,6 +38,10 @@ typedef struct {
     hk_sensor_mgr_t sensors;
     hk_gps_t        gps;
     hk_battery_t    batt;
+
+    /* storage (SD card logging) */
+    hk_sd_t      sd;
+    hk_storage_t storage;
 
     /* actuators */
     hk_servo_t   servo;

@@ -9,8 +9,14 @@ add_compile_definitions(HK_HOST=1)
 add_compile_options(-Wall -Wextra -Wshadow -Wconversion -O1 -g)
 
 # App/ is the include root so headers resolve as "common/crc.h" etc.
+# third_party/fatfs provides "ff.h"/"diskio.h" for the storage stack.
 set(APP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../App)
-include_directories(${APP_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${APP_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
+                    ${APP_DIR}/third_party/fatfs)
+
+# Vendored code is not held to our warning level.
+set_source_files_properties(${APP_DIR}/third_party/fatfs/ff.c
+                            PROPERTIES COMPILE_OPTIONS "-w")
 
 enable_testing()
 
@@ -31,10 +37,18 @@ add_executable(test_services test_services.c
                                            ${APP_DIR}/services/health/health.c)
 add_executable(test_bmp280  test_bmp280.c  mocks/mock_i2c.c
                                            ${APP_DIR}/drivers/bmp280/bmp280.c)
+add_executable(test_sd_spi  test_sd_spi.c  mocks/mock_spi.c
+                                           ${APP_DIR}/drivers/sd_spi/sd_spi.c
+                                           ${APP_DIR}/common/crc.c)
+add_executable(test_storage test_storage.c mocks/diskio_ram.c
+                                           ${APP_DIR}/services/storage/storage.c
+                                           ${APP_DIR}/common/crc.c
+                                           ${APP_DIR}/common/ringbuf.c
+                                           ${APP_DIR}/third_party/fatfs/ff.c)
 
 # Math (powf) needs libm on some toolchains.
 foreach(t test_crc test_ringbuf test_sht4x test_gps test_actuators test_services
-          test_bmp280)
+          test_bmp280 test_sd_spi test_storage)
     target_link_libraries(${t} m)
     add_test(NAME ${t} COMMAND ${t})
 endforeach()

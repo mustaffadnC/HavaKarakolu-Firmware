@@ -16,7 +16,8 @@ typedef enum {
     HK_TASK_GPS     = 1u << 2,
     HK_TASK_CONTROL = 1u << 3,
     HK_TASK_MISSION = 1u << 4,
-    HK_TASK_TELEM   = 1u << 5
+    HK_TASK_STORAGE = 1u << 5   /* informational: NOT in the IWDG mask (a dead
+                                   SD card must not reboot the capsule) */
 } hk_task_flag_t;
 
 /* Pure/host-testable: are all expected task bits present in `kicked`? */
