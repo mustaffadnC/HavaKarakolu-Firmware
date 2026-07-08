@@ -36,6 +36,12 @@ uint16_t hk_crc16_xmodem(const uint8_t *data, size_t len);
  */
 uint8_t hk_crc7_sd(const uint8_t *data, size_t len);
 
+/*
+ * CRC-32/ISO-HDLC (zlib): reflected, poly 0xEDB88320, init/xorout 0xFFFFFFFF.
+ * Used by the config service to validate NV records.
+ */
+uint32_t hk_crc32(const uint8_t *data, size_t len);
+
 #ifdef __cplusplus
 }
 #endif

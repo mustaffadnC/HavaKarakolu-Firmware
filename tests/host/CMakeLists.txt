@@ -56,6 +56,10 @@ target_include_directories(test_bmi270 PRIVATE ${APP_DIR}/drivers/bmi270/vendor)
 add_executable(test_mission test_mission.c
                                            ${APP_DIR}/services/mission/mission.c
                                            ${APP_DIR}/common/filters.c)
+add_executable(test_config  test_config.c
+                                           ${APP_DIR}/services/config/config.c
+                                           ${APP_DIR}/services/mission/mission.c
+                                           ${APP_DIR}/common/crc.c)
 add_executable(test_flight_e2e test_flight_e2e.c
                                            sim/flight_sim.c
                                            mocks/diskio_ram.c
@@ -70,7 +74,7 @@ add_executable(test_flight_e2e test_flight_e2e.c
 # Math (powf) needs libm on some toolchains.
 foreach(t test_crc test_ringbuf test_sht4x test_gps test_actuators test_services
           test_bmp280 test_sd_spi test_storage test_bmi270 test_mission
-          test_flight_e2e)
+          test_config test_flight_e2e)
     target_link_libraries(${t} m)
     add_test(NAME ${t} COMMAND ${t})
 endforeach()

@@ -16,6 +16,8 @@
 #include "drivers/lock/lock.h"
 #include "drivers/sd_spi/sd_spi.h"
 #include "drivers/servo/servo.h"
+#include "bus/nv_if.h"
+#include "services/config/config.h"
 #include "services/mission/mission.h"
 #include "services/sensor_manager/sensor_manager.h"
 #include "services/storage/storage.h"
@@ -46,6 +48,10 @@ typedef struct {
 
     /* mission state machine */
     hk_mission_t mission;
+
+    /* configuration (NV flash journal + SD CONFIG.INI overlay) */
+    hk_nv_t          nv;
+    hk_config_body_t cfg;
 
     /* actuators */
     hk_servo_t   servo;

@@ -36,5 +36,8 @@ int main(void)
     HK_CHECK_EQ_INT(hk_crc7_sd(cmd0, sizeof(cmd0)), 0x95);
     HK_CHECK_EQ_INT(hk_crc7_sd(cmd8, sizeof(cmd8)), 0x87);
 
+    /* CRC-32/ISO-HDLC check value for "123456789" is 0xCBF43926. */
+    HK_CHECK((long)hk_crc32(check, 9) == (long)0xCBF43926u);
+
     return hk_test_summary();
 }

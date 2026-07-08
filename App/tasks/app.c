@@ -62,10 +62,32 @@ void hk_app_init(void)
     g_app.sd.ready         = false;
     hk_diskio_sd_bind(&g_app.sd);
 
+    /* configuration: NV journal, then the SD CONFIG.INI overlay. Both happen
+     * BEFORE any task exists, so the values are immutable afterwards. */
+    (void)hk_nv_flash_init(&g_app.nv);
+    uint32_t cfg_seq = hk_config_load(&g_app.nv, &g_app.cfg);
+    {
+        FATFS fs;
+        if (f_mount(&fs, "", 1) == FR_OK) {
+            FIL f;
+            if (f_open(&f, "/CONFIG.INI", FA_READ) == FR_OK) {
+                static char ini[2048];
+                UINT br = 0;
+                if (f_read(&f, ini, sizeof(ini) - 1u, &br) == FR_OK && br > 0) {
+                    int n = hk_config_apply_ini(&g_app.cfg, ini, br);
+                    HK_LOGI("config", "CONFIG.INI overlay: %d key(s)", n);
+                }
+                (void)f_close(&f);
+            }
+            (void)f_unmount("");
+        }
+    }
+    HK_LOGI("config", "loaded (nv seq=%lu)", (unsigned long)cfg_seq);
+
     hk_storage_cfg_t scfg = {
-        .sync_period_ms  = 1000,
+        .sync_period_ms  = g_app.cfg.storage_sync_period_ms,
         .retry_period_ms = 5000,
-        .imu_decim       = HK_IMU_LOG_DECIM,
+        .imu_decim       = g_app.cfg.imu_log_decim,
         .fw_version      = HK_FW_VERSION,
         .reset_reason    = 0,
     };
@@ -73,7 +95,8 @@ void hk_app_init(void)
     hk_storage_set_lock(&g_app.storage, storage_lock, storage_unlock, NULL);
 
     hk_battery_init(&g_app.batt, &hadc1, HK_BAT_ADC_CHANNEL,
-                    HK_ADC_VREF_V, HK_ADC_FULL_SCALE, HK_BAT_DIVIDER_RATIO,
+                    HK_ADC_VREF_V, HK_ADC_FULL_SCALE,
+                    g_app.cfg.bat_divider_ratio,
                     HK_BATT_CELLS, HK_BATT_EMA_ALPHA);
 
     hk_sensors_init(&g_app.sensors, &g_app.i2c1, &g_app.i2c2, &g_app.swi2c);
@@ -91,11 +114,9 @@ void hk_app_init(void)
 
     hk_servo_set_angle(&g_app.servo, HK_SERVO_HOLD_DEG);
 
-    /* mission: parametric thresholds (P7 config service will override) */
-    hk_mission_cfg_t mcfg = hk_mission_default_cfg();
+    /* mission: thresholds come from the config service (NV + INI overlay) */
+    hk_mission_cfg_t mcfg = g_app.cfg.mission;
     mcfg.selftest_required_mask = HK_SENSOR_BARO | HK_SENSOR_BMI270;
-    mcfg.servo_hold_deg    = HK_SERVO_HOLD_DEG;
-    mcfg.servo_release_deg = HK_SERVO_RELEASE_DEG;
     hk_mission_init(&g_app.mission, &mcfg);
 
     hk_health_init(&hiwdg, HK_TASK_IMU | HK_TASK_ENV | HK_TASK_GPS |
