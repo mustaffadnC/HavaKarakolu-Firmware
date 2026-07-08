@@ -56,10 +56,21 @@ target_include_directories(test_bmi270 PRIVATE ${APP_DIR}/drivers/bmi270/vendor)
 add_executable(test_mission test_mission.c
                                            ${APP_DIR}/services/mission/mission.c
                                            ${APP_DIR}/common/filters.c)
+add_executable(test_flight_e2e test_flight_e2e.c
+                                           sim/flight_sim.c
+                                           mocks/diskio_ram.c
+                                           ${APP_DIR}/services/mission/mission.c
+                                           ${APP_DIR}/services/storage/storage.c
+                                           ${APP_DIR}/drivers/gps_ublox/nmea.c
+                                           ${APP_DIR}/common/filters.c
+                                           ${APP_DIR}/common/crc.c
+                                           ${APP_DIR}/common/ringbuf.c
+                                           ${APP_DIR}/third_party/fatfs/ff.c)
 
 # Math (powf) needs libm on some toolchains.
 foreach(t test_crc test_ringbuf test_sht4x test_gps test_actuators test_services
-          test_bmp280 test_sd_spi test_storage test_bmi270 test_mission)
+          test_bmp280 test_sd_spi test_storage test_bmi270 test_mission
+          test_flight_e2e)
     target_link_libraries(${t} m)
     add_test(NAME ${t} COMMAND ${t})
 endforeach()
