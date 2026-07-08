@@ -38,6 +38,7 @@ static void tick(sim_t *s)
     hk_mission_step(&s->m, &s->in, &s->out);
     if (s->out.event) {
         s->events++;
+        s->visited_mask |= 1u << s->out.event_from;
     }
     s->visited_mask |= 1u << s->out.state;
     /* commands are edge-triggered: consumed by one step */
@@ -162,12 +163,13 @@ static void test_selftest_timeout_degraded(void)
 static void test_baro_only_release(void)
 {
     hk_mission_cfg_t c = test_cfg();
+    c.selftest_required_mask = F_BARO;    /* IMU is known-dead on this run */
     sim_t s;
     sim_init(&s, &c);
     s.in.imu_ok = false;              /* IMU dead: vspeed path must work */
     s.in.sensor_ok_mask = F_BARO;
     s.in.accel_g = 0.0f;              /* garbage from a dead IMU: ignored */
-    tick(&s); tick(&s);
+    HK_CHECK(run_until(&s, HK_MISSION_ATTACHED, 1000));
     s.in.arm_cmd = true;
     tick(&s);
     HK_CHECK_EQ_INT(s.m.state, HK_MISSION_ARMED);
