@@ -18,8 +18,7 @@ hk_status_t hk_sensors_init(hk_sensor_mgr_t *m,
     m->baro_ref_pa = HK_STD_PRESSURE_PA;
     hk_comp_filter_init(&m->attitude, 0.98f);
 
-    /* TODO(P2): rev-2 board carries a BMP280 -- replace with hk_bmp280 driver. */
-    hk_status_t bmp = hk_bmp581_init(&m->bmp, i2c_main, HK_ADDR_BMP280);
+    hk_status_t bmp = hk_bmp280_init(&m->bmp, i2c_main, HK_ADDR_BMP280);
     hk_state_set_sensor_ok(HK_SENSOR_BARO, bmp == HK_OK);
 
     (void)hk_sht4x_init(&m->sht1, i2c_sht1, HK_ADDR_SHT4X, "SHT1");
@@ -36,7 +35,7 @@ hk_status_t hk_sensors_init(hk_sensor_mgr_t *m,
 void hk_sensors_set_baro_ref(hk_sensor_mgr_t *m)
 {
     float t, p;
-    if (hk_bmp581_read(&m->bmp, &t, &p) == HK_OK && p > 0.0f) {
+    if (hk_bmp280_read(&m->bmp, &t, &p) == HK_OK && p > 0.0f) {
         m->baro_ref_pa = p;
         HK_LOGI("sensors", "baro ref = %.0f Pa", (double)p);
     }
@@ -45,7 +44,7 @@ void hk_sensors_set_baro_ref(hk_sensor_mgr_t *m)
 void hk_sensors_sample_env(hk_sensor_mgr_t *m)
 {
     float t_bmp = 0, p = 0, alt = 0;
-    bool  bmp_ok = (hk_bmp581_read_altitude(&m->bmp, m->baro_ref_pa,
+    bool  bmp_ok = (hk_bmp280_read_altitude(&m->bmp, m->baro_ref_pa,
                                             &t_bmp, &p, &alt) == HK_OK);
 
     /* SHT4x: trigger both, wait once, fetch both. */
