@@ -54,7 +54,11 @@ def parse_frames(blob: bytes):
         plen = blob[pos + 4]
         total = 5 + plen + 2
         if pos + total > n:
-            break  # torn tail
+            # looks like a frame but runs past the end: either a torn tail or
+            # a fake magic mid-stream -- resync, do not give up on the rest
+            pos += 1
+            resyncs += 1
+            continue
         crc_stored = blob[pos + 5 + plen] | (blob[pos + 6 + plen] << 8)
         crc_calc = crc16_ccitt(blob[pos + 2:pos + 5 + plen])
         if crc_stored != crc_calc:
@@ -143,6 +147,7 @@ def selftest() -> int:
     ok = (rows == 3
           and stats["good"] == 3
           and stats["bad_crc"] >= 1
+          and stats["resyncs"] >= 1
           and "ENV,1500,ATTACHED" in text
           and "EVENT,2100,ATTACHED->ARMED" in text
           and "META,0,fw=0x0200" in text)

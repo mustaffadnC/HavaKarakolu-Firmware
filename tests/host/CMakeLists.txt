@@ -16,6 +16,8 @@ include_directories(${APP_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 
 # Vendored code is not held to our warning level.
 set_source_files_properties(${APP_DIR}/third_party/fatfs/ff.c
+                            ${APP_DIR}/drivers/bmi270/vendor/bmi2.c
+                            ${APP_DIR}/drivers/bmi270/vendor/bmi270.c
                             PROPERTIES COMPILE_OPTIONS "-w")
 
 enable_testing()
@@ -45,10 +47,16 @@ add_executable(test_storage test_storage.c mocks/diskio_ram.c
                                            ${APP_DIR}/common/crc.c
                                            ${APP_DIR}/common/ringbuf.c
                                            ${APP_DIR}/third_party/fatfs/ff.c)
+add_executable(test_bmi270  test_bmi270.c
+                                           ${APP_DIR}/drivers/bmi270/bmi270_drv.c
+                                           ${APP_DIR}/drivers/bmi270/vendor/bmi2.c
+                                           ${APP_DIR}/drivers/bmi270/vendor/bmi270.c)
+target_compile_definitions(test_bmi270 PRIVATE HK_USE_BMI270=1)
+target_include_directories(test_bmi270 PRIVATE ${APP_DIR}/drivers/bmi270/vendor)
 
 # Math (powf) needs libm on some toolchains.
 foreach(t test_crc test_ringbuf test_sht4x test_gps test_actuators test_services
-          test_bmp280 test_sd_spi test_storage)
+          test_bmp280 test_sd_spi test_storage test_bmi270)
     target_link_libraries(${t} m)
     add_test(NAME ${t} COMMAND ${t})
 endforeach()
