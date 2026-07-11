@@ -115,7 +115,7 @@ Gereksinim: `gcc` + `cmake`. Bu makinede gcc kuruldu:
 | P5 | Görev durum makinesi (parametrik, %100 durum kapsamalı test) | ✅ |
 | P6 | Uçuş simülatörü + uçtan uca sistem testi (`test_flight_e2e`) | ✅ |
 | P7 | Config/NV flash journal + SD `CONFIG.INI` override | ✅ |
-| P8 | Entegrasyon rehberi v2 (`docs/cubemx-setup.md`) ✅ / `.ioc` üretimi | 🔶 CubeIDE'de manuel |
+| P8 | Entegrasyon rehberi (`docs/cubemx-setup.md`) + `hk-capsule-fw.ioc` | ✅ (ilk açılışta gözle doğrula) |
 | P9 | Donanım bring-up (PCB gelince) — plan: `docs/bringup.md` | ⬜ donanım bekliyor |
 
 ---
