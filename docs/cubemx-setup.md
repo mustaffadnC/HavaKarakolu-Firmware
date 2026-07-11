@@ -14,6 +14,14 @@
 
 ## 1. Proje oluşturma
 
+> **KISA YOL — hazır `.ioc` repoda:** [`hk-capsule-fw.ioc`](../hk-capsule-fw.ioc)
+> (Şükrü kartı varyantına göre elle hazırlandı). CubeIDE'de:
+> **File → New → STM32 Project from an Existing STM32CubeMX Configuration File (.ioc)**
+> → repodaki `hk-capsule-fw.ioc`'yi seç. Sürüm taşıma (migrate) sorarsa kabul et.
+> Açıldıktan sonra §2–§5'teki değerleri pinout/clock ekranından **gözle doğrula**
+> (dosya elle yazıldığı için bu doğrulama şart), sonra §6–§7 ile devam et.
+
+Sıfırdan kurmak istersen:
 - File → New → STM32 Project → MCU seç: **STM32F405VGTx** (LQFP100).
 - Proje adı: `hk-capsule-fw` (workspace içinde).
 
