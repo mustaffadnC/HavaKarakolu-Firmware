@@ -120,13 +120,15 @@ Gereksinim: `gcc` + `cmake`. Bu makinede gcc kuruldu:
 
 ---
 
-## Donanım bulguları (rev-2 — bring-up öncesi netlenmeli)
+## Donanım durumu (EE cevapları işlendi — `docs/ee-questions.md`)
 
-Tam liste ve elektronik ekibine sorular: **`docs/ee-questions.md`**. Öne çıkanlar:
+**İki kart varyantı** (derleme: varsayılan `HK_BOARD_SUKRU`; ilk kart için `HK_BOARD_REV2A` sembolü):
 
-1. **⚠️ SWD şüphesi (KRİTİK):** şemada SWDIO/SWCLK, PB13/PB14 (pin 52/53) üzerinde görünüyor; STM32'de SWD PA13/PA14'te sabittir. Doğruysa kart ST-Link ile programlanamaz → kurtarma: BOOT0=1 + sistem bootloader (USART3, PB10/PB11) veya bodge tel.
-2. **Kristal Y2 frekansı** şemada okunamadı → saat ağacı 8 MHz varsayıyor, teyit şart.
-3. **Solenoid fail-safe polaritesi** (enerjisiz = kilitli mi?) doğrulanacak; PB0 reset'te LOW = enerjisiz.
-4. **FAN1/FAN2 (PB12/PB15)** timer OC kanalı yok → on/off termostat.
-5. **I2C1 pull-up'ları** rev-2'de mevcut (R10/R11 4.7K) ✓ — `i2cscan` ile yine de doğrulanacak.
-6. **Ayrılma teyit switch'i yok** → boş GPIO'ya mikro-switch önerilir.
+| | Şükrü kartı (önce denenecek) | İlk kart (yedek) |
+|---|---|---|
+| SWD | ✅ PA13/PA14 (ST-Link çalışır) | ❌ yanlış bağlı → BOOT0+UART bootloader (`docs/bringup.md` §3) |
+| Buzzer | PB14 / TIM12_CH1 | PB5 / TIM3_CH2 |
+| FAN2 | PB13 | PB15 |
+| Batarya ölçümü | **yok** (PC0 boş) | PC0 / ADC1_IN10 (÷11) |
+
+Teyitler: kristal **8 MHz** ✓; solenoid **enerjisiz = kilitli** (fail-safe ✓, bobin yalnız RELEASE'te enerjilenir); I2C1 pull-up ✓; BMP280 0x76 ✓; BMI270 INT1 ✓; SD 5V Arduino modülü ✓; güç bütçesi ✓. Kalan öneri: ayrılma teyit mikro-switch'i (boş GPIO mevcut).

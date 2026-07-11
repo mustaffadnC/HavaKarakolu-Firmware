@@ -94,23 +94,26 @@ void hk_app_init(void)
     (void)hk_storage_init(&g_app.storage, &scfg, s_log_queue, sizeof(s_log_queue));
     hk_storage_set_lock(&g_app.storage, storage_lock, storage_unlock, NULL);
 
+#if HK_HAS_BAT_SENSE
     hk_battery_init(&g_app.batt, &hadc1, HK_BAT_ADC_CHANNEL,
                     HK_ADC_VREF_V, HK_ADC_FULL_SCALE,
                     g_app.cfg.bat_divider_ratio,
                     HK_BATT_CELLS, HK_BATT_EMA_ALPHA);
+#endif
 
     hk_sensors_init(&g_app.sensors, &g_app.i2c1, &g_app.i2c2, &g_app.swi2c);
 
     /* actuators */
     hk_servo_init(&g_app.servo, &htim1, HK_SERVO_TIM_CHANNEL,
                   HK_SERVO_MIN_US, HK_SERVO_MAX_US);
-    hk_buzzer_init(&g_app.buzzer, &htim3, HK_BUZZER_TIM_CHANNEL,
+    hk_buzzer_init(&g_app.buzzer, &HK_BUZZER_TIM_HANDLE, HK_BUZZER_TIM_CHANNEL,
                    HK_BUZZER_TIMER_CLK_HZ);
     hk_fan_init(&g_app.fan1, HK_FAN1_GPIO_PORT, HK_FAN1_GPIO_PIN, true);
     hk_fan_init(&g_app.fan2, HK_FAN2_GPIO_PORT, HK_FAN2_GPIO_PIN, true);
-    /* Fail-safe: start LOCKED. engaged_state polarity MUST be confirmed
-     * against the solenoid mechanics (docs/ee-questions.md Q3). */
-    hk_lock_init(&g_app.lock, HK_LOCK_GPIO_PORT, HK_LOCK_GPIO_PIN, GPIO_PIN_SET, true);
+    /* Solenoid is normally-closed (EE answer S3): DE-ENERGIZED = LOCKED.
+     * engaged_state = RESET so the fail-safe hold draws zero current. */
+    hk_lock_init(&g_app.lock, HK_LOCK_GPIO_PORT, HK_LOCK_GPIO_PIN,
+                 GPIO_PIN_RESET, true);
 
     hk_servo_set_angle(&g_app.servo, HK_SERVO_HOLD_DEG);
 
@@ -345,6 +348,7 @@ static void task_control(void *arg)
         /* audible mission-state signaling (rev-2 has no status LEDs) */
         buzzer_play(st.buzzer_pattern, tick);
 
+#if HK_HAS_BAT_SENSE
         /* battery roughly every second */
         if ((tick % 10u) == 0u) {
             float v = 0, soc = 0;
@@ -356,6 +360,7 @@ static void task_control(void *arg)
                 hk_state_set_sensor_ok(HK_SENSOR_BATT, true);
             }
         }
+#endif
 
         hk_health_kick(HK_TASK_CONTROL);
         ++tick;

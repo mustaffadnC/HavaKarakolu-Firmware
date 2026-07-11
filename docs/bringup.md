@@ -1,7 +1,12 @@
 # Donanım Bring-up Planı — PCB Geldiğinde
 
 > Sıra önemlidir: her adım bir öncekinin üstüne kurulur. Bir adım başarısızsa
-> ilerleme; önce sebebi bul. Solenoid **en sona** bırakılır (S3 cevabı şart).
+> ilerleme; önce sebebi bul.
+>
+> **Kart planı (EE cevapları, 2026-07-11):** önce **Şükrü'nün kartı** (SWD
+> doğru, varsayılan firmware varyantı). Çalışmazsa ilk kart (`HK_BOARD_REV2A`
+> sembolüyle derle + §3 UART bootloader yolu — o kartta SWD yanlış bağlı).
+> Solenoid polaritesi TEYİTLİ: enerjisiz = kilitli; §9'daki test yine yapılır.
 
 ## 0. Şimdiden sipariş edilecekler (kargo süresi!)
 
@@ -25,13 +30,14 @@
 4. Akım tüketimini not et (beklenen boşta: ~50–150 mA). Isınan parça var mı elle kontrol (dikkatli).
 5. Sorun yoksa limiti 500 mA'ya çıkar.
 
-## 2. Programlayıcı bağlantısı — S1 kritik anı
+## 2. Programlayıcı bağlantısı
 
 1. ST-Link'i J4'e bağla (3.3V, SWDIO, SWCLK, NRST, GND).
-2. STM32CubeProgrammer → Connect. **Bağlanıyorsa:** S1 endişesi boşmuş, normal akışa devam (§4).
-3. **Bağlanmıyorsa** → §3 kurtarma planı.
+2. STM32CubeProgrammer → Connect. **Şükrü kartında bağlanması beklenir** (SWD PA13/PA14'te, S1/S6 teyitli) → §4'e geç.
+3. Bağlanmıyorsa: kablo/pinout kontrolü; ısrarla olmuyorsa §3.
+4. **İlk karta (REV2A) düşülürse:** SWD orada yanlış bağlı — doğrudan §3 ile yükleme yapılır.
 
-## 3. SWD çalışmıyorsa: kurtarma yolları (sırayla dene)
+## 3. SWD çalışmıyorsa / REV2A kartı: kurtarma yolları (sırayla dene)
 
 **A. Sistem bootloader'ı (UART):**
 1. BOOT0'ı 3.3V'a çek (R5'in MCU tarafı padinden jumper; S5 cevabına göre kolay erişim olabilir).
@@ -65,7 +71,7 @@
 ## 6. GPS ve batarya
 
 1. GPS: kapalı alanda NMEA cümleleri akmalı (fix olmasa da `$GNGGA,,,...`); açık alanda fix + uydu sayısı ≥ 4.
-2. Batarya bölücüsü: PSU'yu 9.0 / 11.1 / 12.6 V'a ayarla, `vbat` logunu multimetreyle karşılaştır. Sapma varsa `CONFIG.INI` → `bat_divider_ratio` ile kalibre et (reflash yok!).
+2. Batarya bölücüsü (**yalnız REV2A kartında var**; Şükrü kartında PC0 boş → bu adım atlanır): PSU'yu 9.0 / 11.1 / 12.6 V'a ayarla, `vbat` logunu multimetreyle karşılaştır. Sapma varsa `CONFIG.INI` → `bat_divider_ratio` ile kalibre et (reflash yok!).
 
 ## 7. SD kart
 
@@ -90,7 +96,7 @@ bat_divider_ratio = 11.08
 1. **Servo** (PSU akım limitli): SERVO_5V rayı ayrı regülatörden; hold↔release açılarını gözle; mekanik sınırlara çarpmıyor mu.
 2. **Buzzer** desenleri: her mission durumunun sesi ayırt edilebilir mi.
 3. **Fanlar**: S4 cevabından sonra; termostat eşiğini ısı tabancası/elle test et (40°C aç / 35°C kapat).
-4. **Solenoid — EN SON, S3 cevabı geldikten sonra:** PSU akım limitiyle; enerjisiz konumun mekanik anlamını doğrula. Fail-safe beklentisi: enerjisiz = KİLİTLİ.
+4. **Solenoid — EN SON:** S3 cevabıyla teyitli: enerjisiz = KİLİTLİ, enerjili (~0.41 A) = bırakma; flyback diyotu var. Firmware bobini yalnız RELEASE penceresinde (varsayılan 1.5 sn) enerjiler. PSU akım limitiyle mekanik bırakmayı gözle; istersen S3'teki PWM tutma-akımı optimizasyonu ileride eklenebilir.
 
 ## 10. Sistem testi
 

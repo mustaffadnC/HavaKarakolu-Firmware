@@ -192,11 +192,11 @@ int main(void)
             if (out.state == HK_MISSION_RECOVERY) { t_recovery = t; }
         }
 
-        /* actuator sanity while flying */
-        if (mission.state < HK_MISSION_RELEASE) {
-            HK_CHECK(out.lock_engaged);
-        } else {
+        /* actuator sanity: the coil is energized ONLY while releasing */
+        if (mission.state == HK_MISSION_RELEASE) {
             HK_CHECK(!out.lock_engaged);
+        } else {
+            HK_CHECK(out.lock_engaged);
         }
 
         /* storage task @10 Hz */

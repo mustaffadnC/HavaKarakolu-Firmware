@@ -185,8 +185,13 @@ void hk_mission_step(hk_mission_t *m, const hk_mission_in_t *in,
     /* ---- level outputs for the (possibly new) state ---- */
     out->state = m->state;
 
-    bool released = (m->state >= HK_MISSION_RELEASE);
-    out->lock_engaged = !released;
+    /* Solenoid is normally-closed (de-energized = locked, EE answer S3):
+     * energize (lock_engaged = false) ONLY during the RELEASE actuation
+     * window. Afterwards the capsule is gone -- de-energize to save the
+     * ~0.41 A coil current and keep it cool. */
+    bool released  = (m->state >= HK_MISSION_RELEASE);
+    bool releasing = (m->state == HK_MISSION_RELEASE);
+    out->lock_engaged = !releasing;
     out->servo_deg    = released ? c->servo_release_deg : c->servo_hold_deg;
 
     switch (m->state) {

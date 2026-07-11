@@ -3,6 +3,10 @@
 > Bu dokümandaki her madde `App/bsp/board_config.h` ile bire bir uyumludur.
 > `.ioc` üretildikten sonra bu repoya (`docs/` yanına veya kök dizine) commit'lenir.
 
+> **İki kart varyantı var** (bkz. `docs/ee-questions.md` cevap özeti):
+> Bu rehber **varsayılan = Şükrü'nün kartına** göredir (SWD doğru, önce bu denenecek).
+> İlk kart (`HK_BOARD_REV2A`) için farklar §9'da.
+
 ## 0. Kurulum (bu makinede henüz yok)
 
 1. [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) indir (ücretsiz, ST hesabı ister) ve kur. CubeMX, CubeIDE'nin içinde gömülü gelir; ayrıca kurmaya gerek yok.
@@ -15,7 +19,7 @@
 
 ## 2. Saat ağacı (RCC)
 
-> ⚠️ **Y2 kristal frekansı elektronik ekibinden teyit bekliyor** (`docs/ee-questions.md` S2). Aşağıdakiler 8 MHz varsayımıyla; farklı çıkarsa yalnız "Input frequency" ve PLL M değişir.
+> ✅ Kristal **8 MHz teyitli** (S2 cevabı).
 
 - RCC → HSE: **Crystal/Ceramic Resonator**.
 - Clock Configuration sekmesi: Input 8 MHz → PLL: **M=8, N=336, P=2** → SYSCLK **168 MHz**; AHB 168, **APB1 42** (timer 84), **APB2 84** (timer 168).
@@ -31,24 +35,24 @@
 | **I2C2** | I2C, Fast Mode **400 kHz** | PB10 SCL, PB11 SDA |
 | **SPI1** | Full-Duplex Master, 8-bit, Motorola, **prescaler 256 ile başla** (~328 kHz; sürücü çalışma anında hızlandırır), NSS: **Disable** | PA5 SCK, PA6 MISO, PA7 MOSI |
 | **TIM1** | CH1 PWM Generation; PSC=167 (1 µs tick), ARR=19999 (50 Hz) | PA8 |
-| **TIM3** | CH2 PWM Generation (buzzer; PSC/ARR'yi kod ayarlar) | **PB5** |
-| **ADC1** | IN10, 12-bit, sürekli değil (kod tetikler) | PC0 |
+| **TIM12** | CH1 PWM Generation (buzzer; PSC/ARR'yi kod ayarlar) | **PB14** |
 | **IWDG** | Etkin; prescaler 64, reload ~2 s | — |
+
+> Bu kartta ADC yok (BAT_TEST bağlanmamış, PC0 boş) — ADC1 açılmaz.
 
 ## 4. GPIO
 
 | Pin | Mod | Başlangıç | Etiket (User Label) |
 |---|---|---|---|
 | **PA4** | GPIO_Output | **HIGH** (CS pasif) | SD_CS |
-| **PB0** | GPIO_Output | **LOW** (solenoid enerjisiz!) | SOLENOID |
+| **PB0** | GPIO_Output | **LOW** (enerjisiz = kilitli, S3) | SOLENOID |
 | PB12 | GPIO_Output | LOW | FAN1 |
-| **PB15** | GPIO_Output | LOW | FAN2 |
+| **PB13** | GPIO_Output | LOW | FAN2 |
 | PB8 | GPIO_Output **Open-Drain**, pull yok | HIGH | SWI2C_SCL |
 | PB9 | GPIO_Output **Open-Drain**, pull yok | HIGH | SWI2C_SDA |
 | **PC4** | GPIO_EXTI4 (Rising), NVIC EXTI4 açık | — | BMI270_INT (opsiyonel) |
 
-> 🔴 **PB13 ve PB14'e HİÇBİR ŞEY atama.** Şemada SWD netleri bu pinlerde görünüyor (`docs/ee-questions.md` S1); cevap gelene kadar bu pinler girişte/analogda kalmalı.
-> PA1/PA2 (eski WS2812) rev-2'de boş — atama yapılmaz.
+> PA0–PA3, PB5, PB15, PC0 ve diğer işaretsiz pinler bu kartta boş — atama yapılmaz.
 
 ## 5. SYS / FreeRTOS
 
@@ -60,7 +64,7 @@
 
 - Toolchain: STM32CubeIDE.
 - Code Generator: "Generate peripheral initialization as a pair of .c/.h" işaretle.
-- Beklenen handle adları (kod bunlara bağlanır): `hi2c1, hi2c2, huart1, htim1, htim3, hspi1, hadc1, hiwdg`.
+- Beklenen handle adları (kod bunlara bağlanır): `hi2c1, hi2c2, huart1, htim1, htim12, hspi1, hiwdg`.
 
 ## 7. Kod üretimi sonrası entegrasyon
 
@@ -85,5 +89,16 @@
 
 ## 8. Bilinen açık noktalar
 
-- Kristal ≠ 8 MHz çıkarsa: yalnız §2 değişir; UART baud ve tüm timer hesapları SYSCLK'ten türediği için başka değişiklik gerekmez.
 - BMI270 INT (PC4/EXTI4) şimdilik opsiyonel: kod polling ile çalışıyor; EXTI yolu bring-up'ta etkinleştirilecek.
+
+## 9. HK_BOARD_REV2A varyantı (ilk kart — yedek)
+
+İlk kart denenmek zorunda kalınırsa **ayrı bir `.ioc`** gerekir; farklar:
+
+| Konu | Şükrü (varsayılan) | REV2A |
+|---|---|---|
+| Buzzer | TIM12_CH1, PB14 | **TIM3_CH2, PB5** (handle `htim3`) |
+| FAN2 | PB13 | **PB15** |
+| Batarya | yok | **ADC1_IN10, PC0** (handle `hadc1`) |
+| SWD | PA13/PA14 çalışır | **BOZUK** → BOOT0+UART bootloader (`bringup.md` §3); PB13/PB14'e hiçbir şey atanmaz |
+| Derleyici sembolü | — | **`HK_BOARD_REV2A`** tanımla (Paths and Symbols → Symbols) |

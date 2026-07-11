@@ -1,8 +1,33 @@
 # Elektronik Ekibine Sorular — ÇARGE Rev-2 PCB
 
+> **✅ CEVAPLANDI (2026-07-11, Cevaplar.pdf + WhatsApp).** Özet aşağıda;
+> orijinal sorular arşiv olarak korunuyor.
+
+## Cevap özeti ve firmware'e etkisi
+
+| # | Cevap | Firmware'e etkisi |
+|---|---|---|
+| S1 | **İlk kartta SWDIO/SWCLK yanlış (PB13/PB14'e) bağlanmış — şüphe doğrulandı.** Şükrü'nün kartında doğru (PA13/PA14). Önce Şükrü'nün kartı denenecek. | İki kart varyantı: `HK_BOARD_SUKRU` (varsayılan) / `HK_BOARD_REV2A` (`board_config.h`). REV2A için UART bootloader planı geçerli (`bringup.md` §3) |
+| S2 | **8 MHz kristal, 10pF** | Saat ağacı varsayımı doğru, değişiklik yok |
+| S3 | **Solenoid normalde kapalı: enerjisiz = KİLİTLİ** (istenen fail-safe ✓). Enerjili ~0.41 A, flyback var, PWM ile tutma akımı düşürülebilir | Lock polaritesi düzeltildi (engage=RESET); bobin yalnız RELEASE penceresinde enerjileniyor |
+| S4 | Fan 12V direkt, N-FET low-side | Değişiklik yok (on/off termostat) |
+| S5 | BOOT0 GND'de, flash'tan boot ✓ | REV2A kurtarması için pad erişimi bring-up'ta bakılacak |
+| S6 | PA13 bağlı (Şükrü kartı) ✓ | — |
+| S7 | SD modülü 5V Arduino tipi, üzerinde 1117 regülatör | Beklendiği gibi |
+| S8 | I2C1 pull-up var ✓ | — |
+| S9 | BMP280 CSB/SDO doğru ✓ (adres 0x76) | — |
+| S10 | BMI270 **INT1** doğru ✓ | PC4 EXTI planı geçerli |
+| S11 | 100K/10K dirençler 1/8W | Tolerans belirtilmedi → bring-up'ta `CONFIG.INI` ile kalibrasyon (yalnız REV2A'da batarya ölçümü var) |
+| S12 | AMS1117 1A, XL4015 5A — bütçe yeterli ✓ | — |
+
+**Şükrü kartı ↔ ilk kart farkları (şemalardan):** buzzer PB14/TIM12_CH1 ↔ PB5/TIM3_CH2; FAN2 PB13 ↔ PB15; **BAT_TEST Şükrü kartında YOK (PC0 boş)** ↔ PC0/ADC1_IN10; SWD doğru ↔ yanlış.
+
+---
+
+## Orijinal sorular (arşiv)
+
 > Yazılım ekibinden. PCB üretimdeyken netleşmesi gereken maddeler; **S1 acildir**,
 > cevabına göre kart programlanamayabilir ve üretimden çıkmadan önlem gerekebilir.
-> Cevapları bu dosyaya işleyin veya doğrudan yazılım sorumlusuna iletin.
 
 ## 🔴 S1 — SWD debug hattı (KRİTİK, ACİL)
 

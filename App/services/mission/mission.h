@@ -121,7 +121,9 @@ typedef struct {
 
 typedef struct {
     hk_mission_state_t state;
-    bool     lock_engaged;   /* solenoid: true = hold the capsule           */
+    bool     lock_engaged;   /* true = solenoid de-energized (mechanically
+                                locked at rest); false = energize the coil
+                                (pull to release) -- only during RELEASE     */
     float    servo_deg;
     uint8_t  buzzer_pattern; /* hk_buzzer_pattern_t                         */
     bool     event;          /* a transition happened during this step      */

@@ -99,13 +99,16 @@ static void test_nominal_full_flight(void)
     s.in.vspeed_ms = -2.0f;
     HK_CHECK(run_until(&s, HK_MISSION_RELEASE, 2000));
     HK_CHECK_EQ_INT(s.out.event_arg, HK_MISSION_ARG_FREEFALL);
-    HK_CHECK(!s.out.lock_engaged);                /* solenoid released */
+    HK_CHECK(!s.out.lock_engaged);                /* coil energized: releasing */
     HK_CHECK(fabsf(s.out.servo_deg - c.servo_release_deg) < 0.1f);
 
     /* parachute opens: 1 g again, sinking at 6 m/s; actuation dwell 1.5 s */
     s.in.accel_g   = 1.0f;
     s.in.vspeed_ms = -6.0f;
     HK_CHECK(run_until(&s, HK_MISSION_DESCENT, 3000));
+    /* past the actuation window: coil de-energized again (saves 0.41 A) */
+    HK_CHECK(s.out.lock_engaged);
+    HK_CHECK(fabsf(s.out.servo_deg - c.servo_release_deg) < 0.1f);
 
     /* touch down: quiet on both sensors, hold 4 s */
     s.in.vspeed_ms = 0.0f;

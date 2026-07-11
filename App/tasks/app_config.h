@@ -55,7 +55,7 @@
 #define HK_SERVO_RELEASE_DEG    180.0f
 #define HK_SERVO_HOLD_DEG       0.0f
 
-/* ---- Buzzer timer input clock (TIM3 on APB1 -> 84 MHz) ---- */
+/* ---- Buzzer timer input clock (TIM12 or TIM3, both APB1 -> 84 MHz) ---- */
 #define HK_BUZZER_TIMER_CLK_HZ  84000000u
 
 #endif /* HK_APP_CONFIG_H */
