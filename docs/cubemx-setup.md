@@ -7,10 +7,11 @@
 > Bu rehber **varsayılan = Şükrü'nün kartına** göredir (SWD doğru, önce bu denenecek).
 > İlk kart (`HK_BOARD_REV2A`) için farklar §9'da.
 
-## 0. Kurulum (bu makinede henüz yok)
+## 0. Kurulum
 
-1. [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) indir (ücretsiz, ST hesabı ister) ve kur. CubeMX, CubeIDE'nin içinde gömülü gelir; ayrıca kurmaya gerek yok.
-2. İlk açılışta workspace olarak repo DIŞINDA bir klasör seç (örn. `C:\Users\pc\STM32CubeIDE\workspace`). CubeMX'in ürettiği `Core/Drivers/Middlewares` bu repoya **girmez** (politika: yalnız taşınabilir `App/` versiyonlanır).
+1. [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) indir ve kur. ✅ Bu makinede kurulu: `C:\ST\STM32CubeIDE_2.2.0`.
+2. ⚠️ **CubeIDE 2.x, CubeMX'i İÇERMEZ** (`.ioc` açınca "Install stm32cubeMX program" hatası verir). [STM32CubeMX](https://www.st.com/en/development-tools/stm32cubemx.html) standalone olarak ayrıca indirilip kurulmalı. Kod üretimi CubeMX'te yapılır (Toolchain = STM32CubeIDE), proje CubeIDE'de derlenir.
+3. İlk açılışta workspace olarak repo DIŞINDA bir klasör seç (örn. `C:\Users\pc\STM32CubeIDE\workspace`). CubeMX'in ürettiği `Core/Drivers/Middlewares` bu repoya **girmez** (politika: yalnız taşınabilir `App/` versiyonlanır).
 
 ## 1. Proje oluşturma
 
