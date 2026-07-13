@@ -22,6 +22,12 @@ float hk_battery_soc(float pack_voltage, uint8_t cells);
 #if !defined(HK_HOST)
 
 #include "main.h"
+#include "bsp/board_config.h"
+
+/* The ADC-backed part exists only on boards that route a battery divider
+ * (HK_HAS_BAT_SENSE). The Sukru board leaves PC0 unconnected, so its build
+ * never pulls in the HAL ADC module. */
+#if HK_HAS_BAT_SENSE
 
 typedef struct {
     ADC_HandleTypeDef *hadc;
@@ -42,6 +48,7 @@ hk_status_t hk_battery_init(hk_battery_t *dev, ADC_HandleTypeDef *hadc, uint32_t
 /* Poll ADC, update filter, output filtered voltage [V] and SoC [0..1]. */
 hk_status_t hk_battery_read(hk_battery_t *dev, float *voltage, float *soc);
 
+#endif /* HK_HAS_BAT_SENSE */
 #endif /* !HK_HOST */
 
 #ifdef __cplusplus

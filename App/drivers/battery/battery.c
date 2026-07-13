@@ -23,7 +23,7 @@ float hk_battery_soc(float pack_voltage, uint8_t cells)
     return HK_CLAMP(soc, 0.0f, 1.0f);
 }
 
-#if !defined(HK_HOST)
+#if !defined(HK_HOST) && HK_HAS_BAT_SENSE
 
 hk_status_t hk_battery_init(hk_battery_t *dev, ADC_HandleTypeDef *hadc, uint32_t channel,
                             float vref, float full_scale, float divider_ratio,

@@ -96,11 +96,38 @@ Sıfırdan kurmak istersen:
 5. Derle (Ctrl+B). Hata çıkmamalı; çıkarsa handle adlarını (madde 6) kontrol et.
 6. Üretilen **`.ioc` dosyasını bu repoya kopyala ve commit'le** (tek metin dosyası; `Core/` klasörü repoya girmez).
 
-## 8. Bilinen açık noktalar
+## 8. Headless derleme (bu makinede yapıldı ✅)
+
+`.ioc`'den kod üretimi ve firmware derlemesi bu makinede tamamlandı:
+
+1. **Kod üretimi** (CubeMX CLI, GUI'siz):
+   ```bash
+   MX="$LOCALAPPDATA/Programs/STM32CubeMX"
+   printf 'config load <proje>\\hk-capsule-fw.ioc\nproject generate\nexit\n' > gen.txt
+   "$MX/jre/bin/java.exe" -jar "$MX/STM32CubeMX.exe" -q gen.txt
+   ```
+   (Gerekirse önce `swmgr install stm32cube_f4_1.28.3 ask` ile HAL paketi indirilir.)
+2. **App bağlama:** proje köküne repo `App/` klasörü junction'lanır
+   (`cmd /c mklink /J <proje>\App <repo>\App`).
+3. **Derleme:** `tools/target-build/build_hk.sh` (ST'nin arm-none-eabi-gcc'si).
+   Linker `STM32F405VGTX_FLASH.ld` içinde FLASH **896K**'ya çekilir (NV sektörü).
+
+**Sonuç (Şükrü varyantı, `HK_BOARD_SUKRU`):** 0 uyarı ile derlendi.
+
+| Bölge | Kullanım | Boyut | % |
+|---|---|---|---|
+| FLASH | 92.5 KB | 896 KB | %10 |
+| RAM | 50.5 KB | 128 KB | %38 |
+| CCMRAM | 0 | 64 KB | %0 |
+
+`hk-capsule-fw.elf` + `.bin` hazır; PCB gelince ST-Link ile doğrudan yüklenebilir.
+
+## 9. Bilinen açık noktalar
 
 - BMI270 INT (PC4/EXTI4) şimdilik opsiyonel: kod polling ile çalışıyor; EXTI yolu bring-up'ta etkinleştirilecek.
+- Batarya ölçümü yalnız `HK_BOARD_REV2A`'da derlenir (Şükrü kartında PC0 boş, sürücü tamamen dışlanıyor).
 
-## 9. HK_BOARD_REV2A varyantı (ilk kart — yedek)
+## 10. HK_BOARD_REV2A varyantı (ilk kart — yedek)
 
 İlk kart denenmek zorunda kalınırsa **ayrı bir `.ioc`** gerekir; farklar:
 

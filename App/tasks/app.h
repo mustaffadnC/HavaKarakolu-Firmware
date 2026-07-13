@@ -5,11 +5,15 @@
 
 #include "main.h"
 
+#include "bsp/board_config.h"   /* HK_HAS_BAT_SENSE, pin map */
+
 #include "bus/i2c_hw.h"
 #include "bus/i2c_sw.h"
 #include "bus/spi_hw.h"
 #include "bus/uart_dma.h"
+#if HK_HAS_BAT_SENSE
 #include "drivers/battery/battery.h"
+#endif
 #include "drivers/buzzer/buzzer.h"
 #include "drivers/fan/fan.h"
 #include "drivers/gps_ublox/gps_ublox.h"
@@ -40,7 +44,9 @@ typedef struct {
     /* sensors */
     hk_sensor_mgr_t sensors;
     hk_gps_t        gps;
+#if HK_HAS_BAT_SENSE
     hk_battery_t    batt;
+#endif
 
     /* storage (SD card logging) */
     hk_sd_t      sd;
