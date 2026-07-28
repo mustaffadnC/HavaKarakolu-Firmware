@@ -24,7 +24,7 @@ bool hk_fan_thermostat(float temp_c, float on_above_c, float off_below_c, bool c
 /*
  * 12 V fan via low-side N-MOSFET (AO3400) on a GPIO. For low-side drive,
  * gate HIGH = fan ON, so active_high = true on this board (PB12/PB13).
- * NOTE: these pins lack a timer OC channel on the F405, so this is on/off
+ * NOTE: these pins lack a timer OC channel on the F407, so this is on/off
  * control; variable speed would need software PWM or a pin remap.
  */
 typedef struct {

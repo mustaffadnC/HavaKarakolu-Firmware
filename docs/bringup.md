@@ -47,7 +47,7 @@
 4. Firmware .bin'i 0x08000000'e yaz. Çalışıyor — ama her yüklemede bu tören gerekir; kalıcı çözüm için D'ye bak.
 5. Ayar değişiklikleri için reflash gerekmez: SD karta **CONFIG.INI** koy (aşağıda §8).
 
-**B. USB DFU:** PA11/PA12 padlerine el yapımı USB koparması (data hatları) — F405 DFU destekler; pad erişimi varsa B, A'dan pratik olabilir.
+**B. USB DFU:** PA11/PA12 padlerine el yapımı USB koparması (data hatları) — F407 DFU destekler; pad erişimi varsa B, A'dan pratik olabilir.
 
 **C. Bodge tel:** LQFP100 **pin 72 (PA13) → J4 SWDIO**, **pin 76 (PA14) → J4 SWCLK**; 30 AWG, 0.5 mm pitch — deneyimli el ister.
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Ülgen ÇARGE capsule firmware: STM32F405VGTx, FreeRTOS (CMSIS-RTOS v2), C11.
+Ülgen ÇARGE capsule firmware: STM32F407VGTx, FreeRTOS (CMSIS-RTOS v2), C11.
 The capsule releases from a carrier (servo + solenoid), logs environment data
 (2× SHT4x, BMP280, BMI270, MAX-M10S GPS) to an SD card — the board's ONLY data
 output — and runs thermal control via two fans. Docs are in Turkish; code and
@@ -21,7 +21,8 @@ commit messages in English.
 - **`gh` CLI is installed but its token lacks scopes.** Talk to the GitHub API
   with curl using the git-credential-manager token:
   `TOKEN=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill | grep '^password=' | cut -d= -f2)`
-  Repo: `conny0506/HavaKarakolu-Firmware` (private).
+  Repo: `mustaffadnC/HavaKarakolu-Firmware` (private; moved from `conny0506`,
+  the old URL still redirects).
 - CI sometimes fails in "Set up job" with `Service Unavailable` — that is
   GitHub infrastructure, not the code. Re-run (`.../actions/runs/<id>/rerun-failed-jobs`)
   or trigger `workflow_dispatch` on `host-tests.yml`.
@@ -42,9 +43,14 @@ python3 tools/hk_log_reader.py --selftest        # decode a real log: tools/hk_l
 cd /c/Users/pc/STM32CubeIDE/hk-capsule-fw && bash build_hk.sh
 # (script reference copy: tools/target-build/build_hk.sh; uses CubeIDE's arm-none-eabi-gcc)
 
-# Regenerate Core/Drivers/Middlewares after editing hk-capsule-fw.ioc (headless CubeMX):
+# Regenerate Core/Drivers/Middlewares after editing hk-capsule-fw.ioc (headless CubeMX).
+# Use forward slashes: bash printf reads the \U of C:\Users as a unicode escape and dies.
 MX="$LOCALAPPDATA/Programs/STM32CubeMX"
-printf 'config load C:\\Users\\pc\\STM32CubeIDE\\hk-capsule-fw\\hk-capsule-fw.ioc\nproject generate\nexit\n' > gen.txt
+cat > gen.txt <<'EOF'
+config load C:/Users/pc/STM32CubeIDE/hk-capsule-fw/hk-capsule-fw.ioc
+project generate
+exit
+EOF
 "$MX/jre/bin/java.exe" -jar "$MX/STM32CubeMX.exe" -q gen.txt
 ```
 

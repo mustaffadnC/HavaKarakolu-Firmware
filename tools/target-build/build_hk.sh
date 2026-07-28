@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Headless ARM target build for hk-capsule-fw (STM32F405VGTx), driven from bash
+# Headless ARM target build for hk-capsule-fw (STM32F407VGTx), driven from bash
 # so it does not depend on ST make's shell resolution. Toolchain = the
 # arm-none-eabi-gcc bundled with STM32CubeIDE 2.2.0.
 #
@@ -22,7 +22,7 @@ BUILD=build_hk
 TARGET=hk-capsule-fw
 
 CPU="-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb"
-DEFS="-DUSE_HAL_DRIVER -DSTM32F405xx -DHK_USE_BMI270"
+DEFS="-DUSE_HAL_DRIVER -DSTM32F407xx -DHK_USE_BMI270"
 OPT="-Og -g3"
 INC="-ICore/Inc -IDrivers/STM32F4xx_HAL_Driver/Inc -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include -IDrivers/CMSIS/Include \
@@ -84,13 +84,13 @@ for f in "${C_VENDOR[@]}"; do compile "$f" "-w"; done
 
 # startup
 mkdir -p "$BUILD"
-"$CC" -c $CPU -x assembler-with-cpp Core/Startup/startup_stm32f405vgtx.s -o "$BUILD/startup.o" || FAIL=1
+"$CC" -c $CPU -x assembler-with-cpp Core/Startup/startup_stm32f407vgtx.s -o "$BUILD/startup.o" || FAIL=1
 OBJS+=("$BUILD/startup.o")
 
 if [ "$FAIL" -ne 0 ]; then echo "=== BUILD ABORTED (compile errors above) ==="; exit 1; fi
 
 echo "== linking =="
-LDFLAGS="$CPU -TSTM32F405VGTX_FLASH.ld -specs=nano.specs -specs=nosys.specs \
+LDFLAGS="$CPU -TSTM32F407VGTX_FLASH.ld -specs=nano.specs -specs=nosys.specs \
 -Wl,-Map=$BUILD/$TARGET.map,--cref -Wl,--gc-sections -Wl,--print-memory-usage -u_printf_float -lc -lm"
 if ! "$CC" "${OBJS[@]}" $LDFLAGS -o "$BUILD/$TARGET.elf"; then
   echo "=== LINK FAILED ==="; exit 1

@@ -7,7 +7,7 @@
 #include "main.h"
 
 /*
- * hk_nv_t backed by STM32F405 internal flash SECTOR 11 (128 KB @ 0x080E0000).
+ * hk_nv_t backed by STM32F407 internal flash SECTOR 11 (128 KB @ 0x080E0000).
  *
  * REQUIREMENT: the linker script must cap FLASH LENGTH at 896K so no code or
  * rodata is ever placed in this sector (see docs/cubemx-setup.md).

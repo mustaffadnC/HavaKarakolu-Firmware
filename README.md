@@ -1,8 +1,8 @@
 # Ülgen ÇARGE — Modüler Kapsül Firmware (Rev-2)
 
-STM32F405VGTx tabanlı modüler kapsül kartının gömülü yazılımı. Kapsül; taşıyıcıdan **servo + solenoid** ile ayrılır, iniş boyunca ve yerde ortam verisini (2× SHT4x sıcaklık/nem, BMP280 basınç/irtifa, BMI270 IMU, MAX-M10S GPS) ölçer, **SD karta loglar** ve 2 fan ile termal kontrol yapar. Güç: Li-ion paket (PTC + ters-polarite koruması → 5V buck → 3.3V LDO; servo için ayrı 5V buck).
+STM32F407VGTx tabanlı modüler kapsül kartının gömülü yazılımı. Kapsül; taşıyıcıdan **servo + solenoid** ile ayrılır, iniş boyunca ve yerde ortam verisini (2× SHT4x sıcaklık/nem, BMP280 basınç/irtifa, BMI270 IMU, MAX-M10S GPS) ölçer, **SD karta loglar** ve 2 fan ile termal kontrol yapar. Güç: Li-ion paket (PTC + ters-polarite koruması → 5V buck → 3.3V LDO; servo için ayrı 5V buck).
 
-- **MCU:** STM32F405VGTx (Cortex-M4F @168 MHz, 1MB Flash, 192KB SRAM + 64KB CCM)
+- **MCU:** STM32F407VGTx (Cortex-M4F @168 MHz, 1MB Flash, 192KB SRAM + 64KB CCM)
 - **RTOS / Dil:** FreeRTOS + C (C11)
 - **Araç zinciri:** STM32CubeIDE + CubeMX (HAL). Host birim testleri için gcc + CMake.
 - **Veri çıkışı:** SD kart (SPI1 + FatFs). Telemetri radyosu yok.
@@ -39,7 +39,7 @@ tools/                    yer istasyonu / yardımcı scriptler (python)
 
 Bu repo yalnızca taşınabilir `App/` katmanını ve testleri içerir. ST'nin ürettiği `Core/`, `Drivers/`, `Middlewares/` katmanı CubeMX'te bir kez üretilir, sonra `App/` eklenir:
 
-1. **CubeMX** ile yeni proje: STM32F405VGTx, Toolchain = STM32CubeIDE.
+1. **CubeMX** ile yeni proje: STM32F407VGTx, Toolchain = STM32CubeIDE.
 2. **Clock:** HSE 8 MHz kristal (⚠️ Y2 değeri teyit bekliyor — `docs/ee-questions.md` S2) → PLL → SYSCLK 168 MHz (APB1 42, APB2 84).
 3. **Çevre birimleri** (pin haritası `App/bsp/board_config.h` ile bire bir):
    - USART1 (PA9/PA10) — GPS, DMA RX + global interrupt, IDLE açık

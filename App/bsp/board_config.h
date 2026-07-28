@@ -3,7 +3,7 @@
 
 /*
  * Single source of truth for the board's pin map and peripheral assignments
- * (STM32F405VGTx, LQFP100).
+ * (STM32F407VGTx, LQFP100).
  *
  * TWO board builds exist (2026-07 EE answers, docs/ee-questions.md):
  *

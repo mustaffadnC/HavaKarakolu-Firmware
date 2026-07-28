@@ -23,7 +23,7 @@
 > (dosya elle yazıldığı için bu doğrulama şart), sonra §6–§7 ile devam et.
 
 Sıfırdan kurmak istersen:
-- File → New → STM32 Project → MCU seç: **STM32F405VGTx** (LQFP100).
+- File → New → STM32 Project → MCU seç: **STM32F407VGTx** (LQFP100).
 - Proje adı: `hk-capsule-fw` (workspace içinde).
 
 ## 2. Saat ağacı (RCC)
@@ -82,7 +82,7 @@ Sıfırdan kurmak istersen:
    - **Includes** → `App/` kökü **ve** `App/third_party/fatfs` **ve** `App/drivers/bmi270/vendor` ekle.
 2. Preprocessor sembolü: **`HK_USE_BMI270`** tanımla (Paths and Symbols → Symbols).
 3. Linker ayarları:
-   - `STM32F405RGTX_FLASH.ld` içinde `FLASH ... LENGTH = 1024K` satırını **`896K`** yap (son sektör 11 config NV alanı — `App/bsp/nv_flash_stm32.c`).
+   - `STM32F407VGTX_FLASH.ld` içinde `FLASH ... LENGTH = 1024K` satırını **`896K`** yap (son sektör 11 config NV alanı — `App/bsp/nv_flash_stm32.c`).
    - CSV'de float yazımı için: Project → Properties → C/C++ Build → Settings → MCU Settings → **"Use float with printf"** işaretle (`-u _printf_float`).
 4. `main.c` içinde (CubeMX init'lerinden sonra, scheduler'dan önce):
    ```c
@@ -110,7 +110,7 @@ Sıfırdan kurmak istersen:
 2. **App bağlama:** proje köküne repo `App/` klasörü junction'lanır
    (`cmd /c mklink /J <proje>\App <repo>\App`).
 3. **Derleme:** `tools/target-build/build_hk.sh` (ST'nin arm-none-eabi-gcc'si).
-   Linker `STM32F405VGTX_FLASH.ld` içinde FLASH **896K**'ya çekilir (NV sektörü).
+   Linker `STM32F407VGTX_FLASH.ld` içinde FLASH **896K**'ya çekilir (NV sektörü).
 
 **Sonuç (Şükrü varyantı, `HK_BOARD_SUKRU`):** 0 uyarı ile derlendi.
 

@@ -13,7 +13,7 @@ extern "C" {
 /*
  * Minimal non-volatile storage interface for the config service.
  * Implementations:
- *   - bsp/nv_flash_stm32.c : STM32F405 internal flash, sector 11 (128 KB at
+ *   - bsp/nv_flash_stm32.c : STM32F407 internal flash, sector 11 (128 KB at
  *     0x080E0000; linker must cap FLASH at 896K so code never lands there)
  *   - host tests           : RAM-backed mock with fault injection
  *
