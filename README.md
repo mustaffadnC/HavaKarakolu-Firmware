@@ -122,13 +122,15 @@ Gereksinim: `gcc` + `cmake`. Bu makinede gcc kuruldu:
 
 ## Donanım durumu (EE cevapları işlendi — `docs/ee-questions.md`)
 
-**İki kart varyantı** (derleme: varsayılan `HK_BOARD_SUKRU`; ilk kart için `HK_BOARD_REV2A` sembolü):
+**Tek kart var, derleme varyantı yok.** İlk üretilen kart tasarımdan çıkarıldı; pin haritası 29 Tem 2026'da şemayla satır satır karşılaştırıldı (`App/bsp/board_config.h`).
 
-| | Şükrü kartı (önce denenecek) | İlk kart (yedek) |
-|---|---|---|
-| SWD | ✅ PA13/PA14 (ST-Link çalışır) | ❌ yanlış bağlı → BOOT0+UART bootloader (`docs/bringup.md` §3) |
-| Buzzer | PB14 / TIM12_CH1 | PB5 / TIM3_CH2 |
-| FAN2 | PB13 | PB15 |
-| Batarya ölçümü | **yok** (PC0 boş) | PC0 / ADC1_IN10 (÷11) |
+| | Değer |
+|---|---|
+| MCU | Şemada STM32F405VGTx yazıyor, **STM32F407VGT6 takılacak** (pin ve yazmaç uyumlu) |
+| SWD | ✅ PA13/PA14 (pin 72/76) — ST-Link doğrudan çalışır |
+| Buzzer | PB5 / TIM3_CH2 |
+| Fanlar | FAN1 PB12, FAN2 PB15 |
+| Batarya ölçümü | ✅ PC0 / ADC1_IN10, 100k/10k bölücü (÷11) |
+| Boşta | PB13, PB14 ve D/E portlarının tamamı |
 
 Teyitler: kristal **8 MHz** ✓; solenoid **enerjisiz = kilitli** (fail-safe ✓, bobin yalnız RELEASE'te enerjilenir); I2C1 pull-up ✓; BMP280 0x76 ✓; BMI270 INT1 ✓; SD 5V Arduino modülü ✓; güç bütçesi ✓. Kalan öneri: ayrılma teyit mikro-switch'i (boş GPIO mevcut).

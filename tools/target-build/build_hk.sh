@@ -6,8 +6,8 @@
 # Run from the CubeMX-GENERATED project directory (the one holding Core/,
 # Drivers/, Middlewares/, *.ld and an "App" junction to this repo's App/):
 #     bash build_hk.sh
-# Produces build_hk/hk-capsule-fw.elf (+ .bin). Default board variant is
-# HK_BOARD_SUKRU; add -DHK_BOARD_REV2A to DEFS for the first board.
+# Produces build_hk/hk-capsule-fw.elf (+ .bin). There is a single board, so
+# there are no board-variant symbols -- see App/bsp/board_config.h.
 #
 # This is a reference copy kept in the repo; the live copy sits next to the
 # generated project. See docs/cubemx-setup.md.
@@ -22,7 +22,11 @@ BUILD=build_hk
 TARGET=hk-capsule-fw
 
 CPU="-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb"
-DEFS="-DUSE_HAL_DRIVER -DSTM32F407xx -DHK_USE_BMI270"
+# HAL_ADC_MODULE_ENABLED comes from the command line because CubeMX did not
+# generate the ADC (headless CubeMX drops it; see bsp/periph_tim3_adc1_stm32.c)
+# and so leaves it commented out in stm32f4xx_hal_conf.h. Drop the flag if the
+# ADC is ever enabled properly in the CubeMX GUI.
+DEFS="-DUSE_HAL_DRIVER -DSTM32F407xx -DHK_USE_BMI270 -DHAL_ADC_MODULE_ENABLED"
 OPT="-Og -g3"
 INC="-ICore/Inc -IDrivers/STM32F4xx_HAL_Driver/Inc -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include -IDrivers/CMSIS/Include \

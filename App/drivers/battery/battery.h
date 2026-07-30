@@ -24,9 +24,10 @@ float hk_battery_soc(float pack_voltage, uint8_t cells);
 #include "main.h"
 #include "bsp/board_config.h"
 
-/* The ADC-backed part exists only on boards that route a battery divider
- * (HK_HAS_BAT_SENSE). The Sukru board leaves PC0 unconnected, so its build
- * never pulls in the HAL ADC module. */
+/* The ADC-backed part is gated on HK_HAS_BAT_SENSE, which the current board
+ * sets: BAT_TEST is routed to PC0 (ADC1_IN10) through a 100k/10k divider.
+ * The gate stays so a future board without the divider drops the HAL ADC
+ * module cleanly rather than failing to link. */
 #if HK_HAS_BAT_SENSE
 
 typedef struct {

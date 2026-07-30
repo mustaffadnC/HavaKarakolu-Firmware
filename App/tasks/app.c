@@ -103,7 +103,10 @@ void hk_app_init(void)
 
     hk_sensors_init(&g_app.sensors, &g_app.i2c1, &g_app.i2c2, &g_app.swi2c);
 
-    /* actuators */
+    /* actuators (TIM3/ADC1 are bsp-owned, not CubeMX-generated) */
+    if (hk_bsp_tim3_adc1_init() != HK_OK) {
+        HK_LOGW("app", "TIM3/ADC1 init failed; buzzer+battery degraded");
+    }
     hk_servo_init(&g_app.servo, &htim1, HK_SERVO_TIM_CHANNEL,
                   HK_SERVO_MIN_US, HK_SERVO_MAX_US);
     hk_buzzer_init(&g_app.buzzer, &HK_BUZZER_TIM_HANDLE, HK_BUZZER_TIM_CHANNEL,

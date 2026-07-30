@@ -2,6 +2,13 @@
 
 > **✅ CEVAPLANDI (2026-07-11, Cevaplar.pdf + WhatsApp).** Özet aşağıda;
 > orijinal sorular arşiv olarak korunuyor.
+>
+> **⚠️ GÜNCELLEME (2026-07-30):** Aşağıdaki cevaplarda geçen "iki kart /
+> Şükrü'nün kartı önce denenecek" planı ARTIK GEÇERSİZ — ilk kart (SWD'si
+> yanlış bağlı olan) tasarımdan tamamen çıkarıldı, **tek kart** kaldı:
+> buzzer PB5/TIM3_CH2, FAN2 PB15, BAT_TEST PC0 (batarya ölçümü VAR),
+> SWD PA13/PA14 doğru. Kartta STM32F407VGT6 takılı (şema sembolü F405 der).
+> Bu dosya tarihsel kayıt olarak olduğu gibi bırakıldı.
 
 ## Cevap özeti ve firmware'e etkisi
 

@@ -3,9 +3,15 @@
 > Bu dokümandaki her madde `App/bsp/board_config.h` ile bire bir uyumludur.
 > `.ioc` üretildikten sonra bu repoya (`docs/` yanına veya kök dizine) commit'lenir.
 
-> **İki kart varyantı var** (bkz. `docs/ee-questions.md` cevap özeti):
-> Bu rehber **varsayılan = Şükrü'nün kartına** göredir (SWD doğru, önce bu denenecek).
-> İlk kart (`HK_BOARD_REV2A`) için farklar §9'da.
+> **Güncelleme 2026-07-30: TEK kart var, varyant yok.** İlk üretilen kart
+> tasarımdan çıkarıldı; `HK_BOARD_SUKRU`/`HK_BOARD_REV2A` sembolleri koddan
+> silindi. Pin haritası: buzzer **PB5/TIM3_CH2**, FAN2 **PB15**, batarya
+> **PC0/ADC1_IN10**, SWD PA13/PA14 (doğru). Şemada F405 yazar, kartta
+> **STM32F407VGT6** takılıdır.
+>
+> ⚠️ **TIM3 ve ADC1, CubeMX'te DEĞİL `App/bsp/periph_tim3_adc1_stm32.c`'de
+> kurulur** (headless CubeMX elle eklenen ADC/TIM bloklarını migrate sırasında
+> atıyor). Ayrıntı §9'da.
 
 ## 0. Kurulum
 
@@ -16,7 +22,7 @@
 ## 1. Proje oluşturma
 
 > **KISA YOL — hazır `.ioc` repoda:** [`hk-capsule-fw.ioc`](../hk-capsule-fw.ioc)
-> (Şükrü kartı varyantına göre elle hazırlandı). CubeIDE'de:
+> (elle hazırlandı, CubeMX 6.15 tarafından normalize edildi). CubeIDE'de:
 > **File → New → STM32 Project from an Existing STM32CubeMX Configuration File (.ioc)**
 > → repodaki `hk-capsule-fw.ioc`'yi seç. Sürüm taşıma (migrate) sorarsa kabul et.
 > Açıldıktan sonra §2–§5'teki değerleri pinout/clock ekranından **gözle doğrula**
@@ -44,10 +50,11 @@ Sıfırdan kurmak istersen:
 | **I2C2** | I2C, Fast Mode **400 kHz** | PB10 SCL, PB11 SDA |
 | **SPI1** | Full-Duplex Master, 8-bit, Motorola, **prescaler 256 ile başla** (~328 kHz; sürücü çalışma anında hızlandırır), NSS: **Disable** | PA5 SCK, PA6 MISO, PA7 MOSI |
 | **TIM1** | CH1 PWM Generation; PSC=167 (1 µs tick), ARR=19999 (50 Hz) | PA8 |
-| **TIM12** | CH1 PWM Generation (buzzer; PSC/ARR'yi kod ayarlar) | **PB14** |
 | **IWDG** | Etkin; prescaler 64, reload ~2 s | — |
 
-> Bu kartta ADC yok (BAT_TEST bağlanmamış, PC0 boş) — ADC1 açılmaz.
+> **TIM3 (buzzer, PB5/CH2) ve ADC1 (batarya, PC0/IN10) CubeMX'te AÇILMAZ** —
+> bunları `App/bsp/periph_tim3_adc1_stm32.c` kurar (§9). `.ioc`'de PB5 ve PC0
+> pin olarak işaretli durur ama IP listesinde TIM3/ADC1 yoktur; bu normaldir.
 
 ## 4. GPIO
 
@@ -56,12 +63,12 @@ Sıfırdan kurmak istersen:
 | **PA4** | GPIO_Output | **HIGH** (CS pasif) | SD_CS |
 | **PB0** | GPIO_Output | **LOW** (enerjisiz = kilitli, S3) | SOLENOID |
 | PB12 | GPIO_Output | LOW | FAN1 |
-| **PB13** | GPIO_Output | LOW | FAN2 |
+| **PB15** | GPIO_Output | LOW | FAN2 |
 | PB8 | GPIO_Output **Open-Drain**, pull yok | HIGH | SWI2C_SCL |
 | PB9 | GPIO_Output **Open-Drain**, pull yok | HIGH | SWI2C_SDA |
 | **PC4** | GPIO_EXTI4 (Rising), NVIC EXTI4 açık | — | BMI270_INT (opsiyonel) |
 
-> PA0–PA3, PB5, PB15, PC0 ve diğer işaretsiz pinler bu kartta boş — atama yapılmaz.
+> PA0–PA3, PB13, PB14 ve D/E portlarının tamamı bu kartta boş — atama yapılmaz.
 
 ## 5. SYS / FreeRTOS
 
@@ -73,7 +80,7 @@ Sıfırdan kurmak istersen:
 
 - Toolchain: STM32CubeIDE.
 - Code Generator: "Generate peripheral initialization as a pair of .c/.h" işaretle.
-- Beklenen handle adları (kod bunlara bağlanır): `hi2c1, hi2c2, huart1, htim1, htim12, hspi1, hiwdg`.
+- Beklenen handle adları (kod bunlara bağlanır): `hi2c1, hi2c2, huart1, htim1, hspi1, hiwdg`. (`htim3` ve `hadc1` CubeMX'ten değil `App/bsp/periph_tim3_adc1_stm32.c`'den gelir.)
 
 ## 7. Kod üretimi sonrası entegrasyon
 
@@ -112,29 +119,34 @@ Sıfırdan kurmak istersen:
 3. **Derleme:** `tools/target-build/build_hk.sh` (ST'nin arm-none-eabi-gcc'si).
    Linker `STM32F407VGTX_FLASH.ld` içinde FLASH **896K**'ya çekilir (NV sektörü).
 
-**Sonuç (Şükrü varyantı, `HK_BOARD_SUKRU`):** 0 uyarı ile derlendi.
+**Sonuç (2026-07-30, tek kart):** 0 uyarı ile derlendi.
 
 | Bölge | Kullanım | Boyut | % |
 |---|---|---|---|
-| FLASH | 92.5 KB | 896 KB | %10 |
-| RAM | 50.5 KB | 128 KB | %38 |
+| FLASH | 94.7 KB | 896 KB | %10.3 |
+| RAM | 50.6 KB | 128 KB | %38.6 |
 | CCMRAM | 0 | 64 KB | %0 |
 
 `hk-capsule-fw.elf` + `.bin` hazır; PCB gelince ST-Link ile doğrudan yüklenebilir.
 
-## 9. Bilinen açık noktalar
+## 9. TIM3 + ADC1 neden CubeMX dışında? (önemli)
+
+Headless CubeMX 6.15, `config load` sırasında `.ioc`'yi migrate ederken elle
+eklenmiş ADC/TIM bloklarını **sessizce siliyor** (iki denemede de IP listesinden
+attı; pinleri tuttu ama `MX_TIM3_Init`/`MX_ADC1_Init` üretmedi, üstelik
+gpio.c'de PB5'i AF moduna alıp `Alternate` alanını hiç set etmedi). Bu yüzden:
+
+- `htim3` (buzzer) ve `hadc1` (batarya) **`App/bsp/periph_tim3_adc1_stm32.c`**
+  içinde tanımlanır ve kurulur; `hk_app_init()` çağırır.
+- HAL ADC modülü `stm32f4xx_hal_conf.h`'de kapalı kaldığından derleme bayrağı
+  **`-DHAL_ADC_MODULE_ENABLED`** ile açılır (`build_hk.sh` içinde, yorumlu).
+- CubeMX ADC dosyalarını projeye kopyalamadığından şu 5 dosya ST deposundan
+  (`STM32Cube_FW_F4_V1.28.3`) projenin `Drivers/` klasörüne elle kopyalandı:
+  `stm32f4xx_hal_adc.{c,h}`, `stm32f4xx_hal_adc_ex.{c,h}`, `stm32f4xx_ll_adc.h`.
+- İleride proje CubeMX **GUI**'sinde açılıp TIM3/ADC1 düzgün etkinleştirilirse:
+  bsp dosyası silinir, `-DHAL_ADC_MODULE_ENABLED` bayrağı kaldırılır ve
+  handle'lar yeniden Core/'dan gelir.
+
+## 10. Diğer açık noktalar
 
 - BMI270 INT (PC4/EXTI4) şimdilik opsiyonel: kod polling ile çalışıyor; EXTI yolu bring-up'ta etkinleştirilecek.
-- Batarya ölçümü yalnız `HK_BOARD_REV2A`'da derlenir (Şükrü kartında PC0 boş, sürücü tamamen dışlanıyor).
-
-## 10. HK_BOARD_REV2A varyantı (ilk kart — yedek)
-
-İlk kart denenmek zorunda kalınırsa **ayrı bir `.ioc`** gerekir; farklar:
-
-| Konu | Şükrü (varsayılan) | REV2A |
-|---|---|---|
-| Buzzer | TIM12_CH1, PB14 | **TIM3_CH2, PB5** (handle `htim3`) |
-| FAN2 | PB13 | **PB15** |
-| Batarya | yok | **ADC1_IN10, PC0** (handle `hadc1`) |
-| SWD | PA13/PA14 çalışır | **BOZUK** → BOOT0+UART bootloader (`bringup.md` §3); PB13/PB14'e hiçbir şey atanmaz |
-| Derleyici sembolü | — | **`HK_BOARD_REV2A`** tanımla (Paths and Symbols → Symbols) |

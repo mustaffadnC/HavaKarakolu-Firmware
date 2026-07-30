@@ -77,14 +77,15 @@ model, RAM disk with power-loss snapshot, RAM-backed NV). `HK_HOST=1` guards
 every target-only file — host tests must never include HAL or
 `bsp/board_config.h`.
 
-**Two board variants** exist because two PCBs were produced.
-`App/bsp/board_config.h` is the single source of truth:
-- `HK_BOARD_SUKRU` (default): SWD works, buzzer PB14/TIM12_CH1, FAN2 PB13,
-  **no battery ADC** (PC0 unconnected — the battery driver is fully excluded
-  via `HK_HAS_BAT_SENSE`).
-- `HK_BOARD_REV2A` (compiler symbol; fallback board): buzzer PB5/TIM3_CH2,
-  FAN2 PB15, battery on PC0; **SWD is miswired** → flash via BOOT0 + UART
-  bootloader (`docs/bringup.md` §3).
+**One board, no build variants.** `App/bsp/board_config.h` is the single
+source of truth and was checked line by line against the schematic on
+2026-07-29: buzzer PB5/TIM3_CH2, FAN1 PB12, FAN2 PB15, solenoid PB0,
+BAT_TEST PC0/ADC1_IN10, BMI270 INT1 PC4, SWD correctly on PA13/PA14, PB13
+and PB14 unconnected. The schematic symbol says STM32F405VGTx but an
+STM32F407VGT6 is fitted (pin- and register-compatible here).
+Earlier revisions had `HK_BOARD_SUKRU` / `HK_BOARD_REV2A` switches — the
+second PCB was dropped from the design, so both are gone. Do not reintroduce
+a variant switch without a second physical board.
 
 **Runtime data flow.** FreeRTOS tasks in `App/tasks/app.c`: sensor tasks (imu
 100 Hz, env 2 Hz, gps) publish into the mutex-protected snapshot

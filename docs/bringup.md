@@ -3,9 +3,12 @@
 > Sıra önemlidir: her adım bir öncekinin üstüne kurulur. Bir adım başarısızsa
 > ilerleme; önce sebebi bul.
 >
-> **Kart planı (EE cevapları, 2026-07-11):** önce **Şükrü'nün kartı** (SWD
-> doğru, varsayılan firmware varyantı). Çalışmazsa ilk kart (`HK_BOARD_REV2A`
-> sembolüyle derle + §3 UART bootloader yolu — o kartta SWD yanlış bağlı).
+> **Kart planı (güncelleme 2026-07-30): TEK kart var.** İlk üretilen kart
+> (SWD'si yanlış bağlı olan) tasarımdan tamamen çıkarıldı; firmware'de kart
+> varyantı/derleme sembolü kalmadı. Kullanılacak kartta SWD **doğru**
+> (PA13/PA14) → ST-Link doğrudan çalışır; §3 yalnız "SWD arızalanırsa"
+> yedek plan olarak durur. Şemada STM32F405 yazar, kartta **STM32F407VGT6**
+> takılıdır (bu projede kullanılan her şey için pin/yazmaç uyumlu).
 > Solenoid polaritesi TEYİTLİ: enerjisiz = kilitli; §9'daki test yine yapılır.
 
 ## 0. Şimdiden sipariş edilecekler (kargo süresi!)
@@ -33,11 +36,10 @@
 ## 2. Programlayıcı bağlantısı
 
 1. ST-Link'i J4'e bağla (3.3V, SWDIO, SWCLK, NRST, GND).
-2. STM32CubeProgrammer → Connect. **Şükrü kartında bağlanması beklenir** (SWD PA13/PA14'te, S1/S6 teyitli) → §4'e geç.
+2. STM32CubeProgrammer → Connect. **Bağlanması beklenir** (SWD şemada PA13/PA14'te, pin 72/76) → §4'e geç.
 3. Bağlanmıyorsa: kablo/pinout kontrolü; ısrarla olmuyorsa §3.
-4. **İlk karta (REV2A) düşülürse:** SWD orada yanlış bağlı — doğrudan §3 ile yükleme yapılır.
 
-## 3. SWD çalışmıyorsa / REV2A kartı: kurtarma yolları (sırayla dene)
+## 3. SWD çalışmıyorsa: kurtarma yolları (sırayla dene)
 
 **A. Sistem bootloader'ı (UART):**
 1. BOOT0'ı 3.3V'a çek (R5'in MCU tarafı padinden jumper; S5 cevabına göre kolay erişim olabilir).
@@ -71,7 +73,7 @@
 ## 6. GPS ve batarya
 
 1. GPS: kapalı alanda NMEA cümleleri akmalı (fix olmasa da `$GNGGA,,,...`); açık alanda fix + uydu sayısı ≥ 4.
-2. Batarya bölücüsü (**yalnız REV2A kartında var**; Şükrü kartında PC0 boş → bu adım atlanır): PSU'yu 9.0 / 11.1 / 12.6 V'a ayarla, `vbat` logunu multimetreyle karşılaştır. Sapma varsa `CONFIG.INI` → `bat_divider_ratio` ile kalibre et (reflash yok!).
+2. Batarya bölücüsü (PC0 / BAT_TEST, 100k/10k ÷11): PSU'yu 9.0 / 11.1 / 12.6 V'a ayarla, `vbat` logunu multimetreyle karşılaştır. Direnç toleransı belirsiz (S11) → sapma varsa `CONFIG.INI` → `bat_divider_ratio` ile kalibre et (reflash yok!).
 
 ## 7. SD kart
 

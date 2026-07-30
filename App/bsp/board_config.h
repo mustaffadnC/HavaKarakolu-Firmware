@@ -5,23 +5,22 @@
  * Single source of truth for the board's pin map and peripheral assignments
  * (STM32F407VGTx, LQFP100).
  *
- * TWO board builds exist (2026-07 EE answers, docs/ee-questions.md):
+ * ONE board only (2026-07-29: the earlier variant was dropped from the design,
+ * schematic reviewed against this file pin by pin). Earlier revisions carried
+ * HK_BOARD_SUKRU / HK_BOARD_REV2A build switches -- both are gone; do not
+ * reintroduce a variant without a second physical board to justify it.
  *
- *   HK_BOARD_SUKRU (default) -- Sukru's board, tried FIRST.
- *     SWD correctly on PA13/PA14 (ST-Link works). Buzzer PB14/TIM12_CH1,
- *     FAN2 PB13, NO battery sense (PC0 is NC), PB5/PB15 unused.
+ * The schematic prints STM32F405VGTx but an STM32F407VGT6 is fitted; the two
+ * are pin- and register-compatible for everything used here.
  *
- *   HK_BOARD_REV2A -- the first board (fallback if Sukru's fails).
- *     SWDIO/SWCLK MISWIRED to PB13/PB14 => flash via BOOT0 + UART bootloader
- *     (docs/bringup.md §3). Buzzer PB5/TIM3_CH2, FAN2 PB15, BAT_TEST on PC0.
- *
- * Select by defining HK_BOARD_REV2A as a compiler symbol; default is SUKRU.
- *
- * Common to both: GPS USART1 (PA9/PA10), I2C1 PB6/PB7 (BMI270 0x68 + BMP280
- * 0x76, 4.7K pullups), SHT4x_1 I2C2 (PB10/PB11), SHT4x_2 bit-bang (PB8/PB9),
+ * Pin map: GPS USART1 (PA9/PA10), I2C1 PB6/PB7 (BMI270 0x68 + BMP280 0x76,
+ * 4.7K pullups R10/R11), SHT4x_1 I2C2 (PB10/PB11), SHT4x_2 bit-bang (PB8/PB9),
  * SD on SPI1 (PA4 CS / PA5 SCK / PA6 MISO / PA7 MOSI, 5V Arduino module),
- * servo TIM1_CH1 PA8 (74AHCT1G125 -> 5V), solenoid PB0, BMI270 INT1 PC4,
- * HSE 8 MHz (EE answer S2).
+ * servo TIM1_CH1 PA8 (74AHCT1G125 -> 5V), solenoid PB0, buzzer PB5/TIM3_CH2,
+ * FAN1 PB12, FAN2 PB15, BAT_TEST PC0/ADC1_IN10, BMI270 INT1 PC4,
+ * SWD PA13/PA14 (correct -- ST-Link works), BOOT0 pulled low via R5 10K,
+ * NRST with SW1 reset button, HSE 8 MHz (EE answer S2).
+ * PB13, PB14 and the whole of ports D/E are unconnected.
  *
  * Solenoid (EE answer S3): normally-closed => DE-ENERGIZED = LOCKED (the
  * desired fail-safe). Energizing (~0.41 A) releases. PB0 low = locked.
@@ -34,6 +33,8 @@
 
 #include "main.h"   /* CubeMX-generated: GPIO defines + HAL handle externs */
 
+#include "common/status.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,20 +46,18 @@ extern UART_HandleTypeDef huart1;   /* GPS MAX-M10S     (PA9/PA10)           */
 extern TIM_HandleTypeDef  htim1;    /* Servo PWM        (PA8  / TIM1_CH1)    */
 extern SPI_HandleTypeDef  hspi1;    /* SD card module   (PA5/PA6/PA7)        */
 
-#if defined(HK_BOARD_REV2A)
+/* htim3/hadc1 live in bsp/periph_tim3_adc1_stm32.c, NOT in CubeMX's Core/
+ * (headless CubeMX drops hand-added ADC/TIM blocks -- see that file). */
 extern TIM_HandleTypeDef  htim3;    /* Buzzer           (PB5  / TIM3_CH2)    */
 extern ADC_HandleTypeDef  hadc1;    /* BAT_TEST         (PC0  / ADC1_IN10)   */
 #define HK_BUZZER_TIM_HANDLE    htim3
 #define HK_BUZZER_TIM_CHANNEL   TIM_CHANNEL_2
 #define HK_HAS_BAT_SENSE        1
 #define HK_FAN2_GPIO_PIN        GPIO_PIN_15   /* PB15 */
-#else /* HK_BOARD_SUKRU (default) */
-extern TIM_HandleTypeDef  htim12;   /* Buzzer           (PB14 / TIM12_CH1)   */
-#define HK_BUZZER_TIM_HANDLE    htim12
-#define HK_BUZZER_TIM_CHANNEL   TIM_CHANNEL_1
-#define HK_HAS_BAT_SENSE        0             /* PC0 is NC on this board */
-#define HK_FAN2_GPIO_PIN        GPIO_PIN_13   /* PB13 */
-#endif
+
+/* One-time init for the two bsp-owned peripherals above; call from
+ * hk_app_init() before the buzzer or battery driver is used. */
+hk_status_t hk_bsp_tim3_adc1_init(void);
 
 /* ---- I2C 7-bit device addresses ---- */
 #define HK_ADDR_BMI270          0x68   /* SDO=GND                            */
@@ -78,7 +77,7 @@ extern TIM_HandleTypeDef  htim12;   /* Buzzer           (PB14 / TIM12_CH1)   */
 #define HK_FAN1_GPIO_PORT       GPIOB
 #define HK_FAN1_GPIO_PIN        GPIO_PIN_12
 #define HK_FAN2_GPIO_PORT       GPIOB
-/* HK_FAN2_GPIO_PIN: variant-specific, defined above */
+/* HK_FAN2_GPIO_PIN (PB15) defined above, next to the peripheral handles */
 
 /* ---- Bit-banged I2C for the second SHT4x (PB8=SCL, PB9=SDA, open-drain) ---- */
 #define HK_SWI2C_SCL_PORT       GPIOB
@@ -97,14 +96,14 @@ extern TIM_HandleTypeDef  htim12;   /* Buzzer           (PB14 / TIM12_CH1)   */
 
 /* ---- Timer channels ---- */
 #define HK_SERVO_TIM_CHANNEL    TIM_CHANNEL_1   /* htim1, PA8 (74AHCT1G125 -> 5V) */
-/* HK_BUZZER_TIM_CHANNEL: variant-specific, defined above */
+/* HK_BUZZER_TIM_CHANNEL (TIM3_CH2) defined above */
 
-#if HK_HAS_BAT_SENSE
-/* ---- ADC (REV2A only) ----
- * Battery sense divider R3=100k (top) / R22=10k (bottom), 1/8W (S11).
- * Vbat = Vadc * 11.0; 3S Li-ion assumed. Calibrate via CONFIG.INI. */
+/* ---- ADC: battery sense ----
+ * Divider R3=100k (top) / R22=10k (bottom), 1/8W (EE answer S11).
+ * Vbat = Vadc * 11.0; 3S Li-ion. Tolerance unspecified, so calibrate the
+ * ratio per board via CONFIG.INI at bring-up. VDDA is filtered by FB2
+ * (600R @ 100 MHz) + 1uF/100nF, so the reference is quiet enough for this. */
 #define HK_BAT_ADC_CHANNEL      ADC_CHANNEL_10  /* PC0, net BAT_TEST */
-#endif
 #define HK_BAT_DIVIDER_RATIO    11.0f
 #define HK_ADC_VREF_V           3.30f
 #define HK_ADC_FULL_SCALE       4095.0f   /* 12-bit */
