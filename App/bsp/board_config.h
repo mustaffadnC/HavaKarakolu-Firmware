@@ -13,7 +13,7 @@
  * The schematic prints STM32F405VGTx but an STM32F407VGT6 is fitted; the two
  * are pin- and register-compatible for everything used here.
  *
- * Pin map: GPS USART1 (PA9/PA10), I2C1 PB6/PB7 (BMI270 0x68 + BMP280 0x76,
+ * Pin map: GPS USART1 (PA9/PA10), I2C1 PB6/PB7 (BMI270 0x68 + BMP581 0x46,
  * 4.7K pullups R10/R11), SHT4x_1 I2C2 (PB10/PB11), SHT4x_2 bit-bang (PB8/PB9),
  * SD on SPI1 (PA4 CS / PA5 SCK / PA6 MISO / PA7 MOSI, 5V Arduino module),
  * servo TIM1_CH1 PA8 (74AHCT1G125 -> 5V), solenoid PB0, buzzer PB5/TIM3_CH2,
@@ -40,7 +40,7 @@ extern "C" {
 #endif
 
 /* ---- Expected CubeMX peripheral handle names (rename here if different) ---- */
-extern I2C_HandleTypeDef  hi2c1;    /* BMI270 + BMP280  (PB6/PB7)            */
+extern I2C_HandleTypeDef  hi2c1;    /* BMI270 + BMP581  (PB6/PB7)            */
 extern I2C_HandleTypeDef  hi2c2;    /* SHT4x #1         (PB10/PB11)          */
 extern UART_HandleTypeDef huart1;   /* GPS MAX-M10S     (PA9/PA10)           */
 extern TIM_HandleTypeDef  htim1;    /* Servo PWM        (PA8  / TIM1_CH1)    */
@@ -61,7 +61,7 @@ hk_status_t hk_bsp_tim3_adc1_init(void);
 
 /* ---- I2C 7-bit device addresses ---- */
 #define HK_ADDR_BMI270          0x68   /* SDO=GND                            */
-#define HK_ADDR_BMP280          0x76   /* SDO=GND, CSB=3.3V (I2C mode)       */
+#define HK_ADDR_BMP581          0x46   /* SDO=GND (0x47 if SDO=VDDIO)        */
 #define HK_ADDR_SHT4X           0x44   /* fixed; two units on separate buses */
 
 /* ---- GPIO: solenoid trigger (PB0, net Solenoid_Tetik) ----

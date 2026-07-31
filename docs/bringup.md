@@ -64,9 +64,9 @@
 
 ## 5. I2C ve sensörler
 
-1. `hk_i2c_scan` çıktısına bak (log): **I2C1 → 0x68 (BMI270) + 0x76 (BMP280)**; **I2C2 → 0x44 (SHT4x_1)**; **bit-bang → 0x44 (SHT4x_2)**.
+1. `hk_i2c_scan` çıktısına bak (log): **I2C1 → 0x68 (BMI270) + 0x46 (BMP581)**; **I2C2 → 0x44 (SHT4x_1)**; **bit-bang → 0x44 (SHT4x_2)**.
 2. Adres eksikse: pull-up'ları (S8), lehimleri, besleme pinlerini ölç.
-3. BMP280 basıncı yereldeki gerçek basınçla karşılaştır (METAR/telefon barometresi, ±300 Pa makul).
+3. BMP581 basıncı yereldeki gerçek basınçla karşılaştır (METAR/telefon barometresi, ±300 Pa makul).
 4. SHT4x×2 oda sıcaklığı/nem mantıklı mı; iki sensör birbirine yakın mı.
 5. BMI270: config blob yüklemesi gerçek busta ilk kez çalışacak (riskli adım). Kart masada düz → az ≈ +9.81 m/s². Sonra PC4 EXTI yolunu etkinleştir.
 

@@ -8,7 +8,13 @@
 > yanlış bağlı olan) tasarımdan tamamen çıkarıldı, **tek kart** kaldı:
 > buzzer PB5/TIM3_CH2, FAN2 PB15, BAT_TEST PC0 (batarya ölçümü VAR),
 > SWD PA13/PA14 doğru. Kartta STM32F407VGT6 takılı (şema sembolü F405 der).
-> Bu dosya tarihsel kayıt olarak olduğu gibi bırakıldı.
+>
+> **⚠️ GÜNCELLEME (2026-07-31): basınç sensörü BMP280 → BMP581.** Aşağıdaki
+> S8/S9 cevapları BMP280 dönemine aittir; artık **BMP581, adres 0x46**
+> (SDO=GND; 0x47 SDO=VDDIO). BMP581'in register haritası ve pin isimleri
+> farklıdır — **elektronik ekibinden yeni şemayla SDO bağlantısının teyidi
+> gerekiyor**, adres buna bağlı. Bu dosya tarihsel kayıt olarak olduğu gibi
+> bırakıldı; güncel donanım gerçeği `App/bsp/board_config.h`'dedir.
 
 ## Cevap özeti ve firmware'e etkisi
 

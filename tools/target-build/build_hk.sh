@@ -49,7 +49,7 @@ C_RTOS=(
 )
 C_APP=(
   App/bsp/*.c App/bus/*.c App/common/*.c
-  App/drivers/bmp280/bmp280.c App/drivers/sht4x/sht4x.c
+  App/drivers/bmp581/bmp581.c App/drivers/sht4x/sht4x.c
   App/drivers/gps_ublox/gps_ublox.c App/drivers/gps_ublox/nmea.c
   App/drivers/bmi270/bmi270_drv.c App/drivers/sd_spi/sd_spi.c
   App/drivers/servo/servo.c App/drivers/buzzer/buzzer.c

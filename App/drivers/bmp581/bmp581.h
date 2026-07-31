@@ -12,19 +12,24 @@ extern "C" {
 
 /*
  * Bosch BMP581 barometric pressure + temperature sensor (I2C).
- * Register-level driver using FORCED mode: each read triggers one
- * oversampled conversion, waits, then reads the result. Suited to the
- * 1-2 Hz environmental sampling rate.
+ * Register-level driver using FORCED mode: each read requests one
+ * oversampled conversion, waits for the device to report completion, then
+ * burst-reads the result. Suited to the 2 Hz environmental sampling rate.
  *
- * NOTE: register constants verified against the BMP581 datasheet; if a
- * future silicon revision changes them, adjust in bmp581.c.
+ * Unlike the BMP280 it replaced, this part linearises and compensates on
+ * chip, so there are no calibration coefficients to fetch and no
+ * compensation arithmetic here: the data registers already hold
+ * T = raw/2^16 [C] and p = raw/2^6 [Pa].
+ *
+ * Register constants and scaling verified against BST-BMP581-DS004.
  */
 typedef struct {
     const hk_i2c_bus_t *bus;
-    uint8_t             addr;   /* 0x46 (SDO=GND) or 0x47 */
+    uint8_t             addr;   /* 0x46 (SDO=GND) or 0x47 (SDO=VDDIO) */
 } hk_bmp581_t;
 
-/* Soft-reset, verify chip id, configure oversampling. */
+/* Soft-reset, verify chip id, leave deep standby, configure oversampling
+ * and read it back. Returns HK_ERR_NOT_FOUND on a chip-id mismatch. */
 hk_status_t hk_bmp581_init(hk_bmp581_t *dev, const hk_i2c_bus_t *bus, uint8_t addr7);
 
 /* Trigger forced conversion, wait, read temperature [°C] and pressure [Pa]. */

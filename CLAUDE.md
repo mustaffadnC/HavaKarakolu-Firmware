@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Ülgen ÇARGE capsule firmware: STM32F407VGTx, FreeRTOS (CMSIS-RTOS v2), C11.
 The capsule releases from a carrier (servo + solenoid), logs environment data
-(2× SHT4x, BMP280, BMI270, MAX-M10S GPS) to an SD card — the board's ONLY data
+(2× SHT4x, BMP581, BMI270, MAX-M10S GPS) to an SD card — the board's ONLY data
 output — and runs thermal control via two fans. Docs are in Turkish; code and
 commit messages in English.
 
@@ -17,7 +17,7 @@ commit messages in English.
   Actions (Ubuntu). A phase is "done" when CI is green, not when it builds.
 - **No AI traces in commits.** Never add `Co-Authored-By: Claude` or
   "Generated with" trailers — this overrides the default commit format.
-  Style: Conventional Commits (`feat(bmp280): ...`).
+  Style: Conventional Commits (`feat(bmp581): ...`).
 - **`gh` CLI is installed but its token lacks scopes.** Talk to the GitHub API
   with curl using the git-credential-manager token:
   `TOKEN=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill | grep '^password=' | cut -d= -f2)`

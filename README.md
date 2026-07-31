@@ -1,6 +1,6 @@
 # Ülgen ÇARGE — Modüler Kapsül Firmware (Rev-2)
 
-STM32F407VGTx tabanlı modüler kapsül kartının gömülü yazılımı. Kapsül; taşıyıcıdan **servo + solenoid** ile ayrılır, iniş boyunca ve yerde ortam verisini (2× SHT4x sıcaklık/nem, BMP280 basınç/irtifa, BMI270 IMU, MAX-M10S GPS) ölçer, **SD karta loglar** ve 2 fan ile termal kontrol yapar. Güç: Li-ion paket (PTC + ters-polarite koruması → 5V buck → 3.3V LDO; servo için ayrı 5V buck).
+STM32F407VGTx tabanlı modüler kapsül kartının gömülü yazılımı. Kapsül; taşıyıcıdan **servo + solenoid** ile ayrılır, iniş boyunca ve yerde ortam verisini (2× SHT4x sıcaklık/nem, BMP581 basınç/irtifa, BMI270 IMU, MAX-M10S GPS) ölçer, **SD karta loglar** ve 2 fan ile termal kontrol yapar. Güç: Li-ion paket (PTC + ters-polarite koruması → 5V buck → 3.3V LDO; servo için ayrı 5V buck).
 
 - **MCU:** STM32F407VGTx (Cortex-M4F @168 MHz, 1MB Flash, 192KB SRAM + 64KB CCM)
 - **RTOS / Dil:** FreeRTOS + C (C11)
@@ -19,7 +19,7 @@ App/                      ← bu repoda yazılan, taşınabilir uygulama kodu
   bsp/                    board pin/clock soyutlaması
   bus/                    i2c_bus_if, uart_if (arayüzler) + HW/SW implementasyonları
   common/                 crc, ringbuf, units, log (saf C, host-testable)
-  drivers/                bmi270, bmp280, sht4x, gps_ublox, sd_spi, servo, fan, buzzer, lock, battery
+  drivers/                bmi270, bmp581, sht4x, gps_ublox, sd_spi, servo, fan, buzzer, lock, battery
   services/               sensor_manager, telemetry, command, mission, health, config, storage
   tasks/                  FreeRTOS görev tanımları + app_init
 Core/ Drivers/ Middlewares/   ← CubeMX/CubeIDE üretir (bu repoda YOK; aşağıdaki entegrasyon)
@@ -108,8 +108,8 @@ Gereksinim: `gcc` + `cmake`. Bu makinede gcc kuruldu:
 | F2 | Sensör sürücüleri (sht4x, baro, gps/nmea, bmi270-wrapper) | ✅ |
 | F3 | Aktüatör/IO sürücüleri (servo, buzzer, fan, lock, battery) | ✅ |
 | F4–F5 | Sağlık/güç + RTOS entegrasyon (filters, system_state, sensor_manager, health/IWDG, app+görevler) | ✅ |
-| **Rev-2 uyarlaması** | board_config v2 (BMP280, pin değişiklikleri, WS2812 çıkarıldı) | ✅ |
-| P2 | BMP280 sürücüsü (datasheet-birebir kompanzasyon testli) | ✅ |
+| **Rev-2 uyarlaması** | board_config v2 (BMP581, pin değişiklikleri, WS2812 çıkarıldı) | ✅ |
+| P2 | Barometre sürücüsü + host testleri | ✅ |
 | P3 | SPI + SD kart + FatFs + storage (log) servisi (güç-kesintisi testli) | ✅ |
 | P4 | BMI270 vendor lib (Bosch SensorAPI v2.86.1, repoda) | ✅ |
 | P5 | Görev durum makinesi (parametrik, %100 durum kapsamalı test) | ✅ |
@@ -133,4 +133,4 @@ Gereksinim: `gcc` + `cmake`. Bu makinede gcc kuruldu:
 | Batarya ölçümü | ✅ PC0 / ADC1_IN10, 100k/10k bölücü (÷11) |
 | Boşta | PB13, PB14 ve D/E portlarının tamamı |
 
-Teyitler: kristal **8 MHz** ✓; solenoid **enerjisiz = kilitli** (fail-safe ✓, bobin yalnız RELEASE'te enerjilenir); I2C1 pull-up ✓; BMP280 0x76 ✓; BMI270 INT1 ✓; SD 5V Arduino modülü ✓; güç bütçesi ✓. Kalan öneri: ayrılma teyit mikro-switch'i (boş GPIO mevcut).
+Teyitler: kristal **8 MHz** ✓; solenoid **enerjisiz = kilitli** (fail-safe ✓, bobin yalnız RELEASE'te enerjilenir); I2C1 pull-up ✓; BMP581 0x46 ✓; BMI270 INT1 ✓; SD 5V Arduino modülü ✓; güç bütçesi ✓. Kalan öneri: ayrılma teyit mikro-switch'i (boş GPIO mevcut).

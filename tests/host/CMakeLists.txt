@@ -37,8 +37,8 @@ add_executable(test_actuators test_actuators.c
 add_executable(test_services test_services.c
                                            ${APP_DIR}/common/filters.c
                                            ${APP_DIR}/services/health/health.c)
-add_executable(test_bmp280  test_bmp280.c  mocks/mock_i2c.c
-                                           ${APP_DIR}/drivers/bmp280/bmp280.c)
+add_executable(test_bmp581  test_bmp581.c  mocks/mock_i2c.c
+                                           ${APP_DIR}/drivers/bmp581/bmp581.c)
 add_executable(test_sd_spi  test_sd_spi.c  mocks/mock_spi.c
                                            ${APP_DIR}/drivers/sd_spi/sd_spi.c
                                            ${APP_DIR}/common/crc.c)
@@ -73,7 +73,7 @@ add_executable(test_flight_e2e test_flight_e2e.c
 
 # Math (powf) needs libm on some toolchains.
 foreach(t test_crc test_ringbuf test_sht4x test_gps test_actuators test_services
-          test_bmp280 test_sd_spi test_storage test_bmi270 test_mission
+          test_bmp581 test_sd_spi test_storage test_bmi270 test_mission
           test_config test_flight_e2e)
     target_link_libraries(${t} m)
     add_test(NAME ${t} COMMAND ${t})

@@ -35,7 +35,10 @@ typedef struct {
     uint32_t t_freefall_ms;    /* freefall before the chute opens         */
     float    chute_rate_ms;    /* steady descent rate [m/s], positive     */
     float    ref_pressure_pa;  /* pressure at launch altitude             */
-    float    press_noise_pa;   /* RMS pressure noise (BMP280 ~1.3 Pa)     */
+    float    press_noise_pa;   /* RMS pressure noise; default stays at the
+                                * pessimistic 1.3 Pa the BMP280 showed, so
+                                * the BMP581 (0.30 Pa at osr_p x8) only ever
+                                * makes the mission logic's job easier    */
     float    accel_noise_g;    /* RMS accel noise                         */
     uint32_t seed;
     double   lat0_deg, lon0_deg;

@@ -5,7 +5,7 @@ Tüm sürücüler `bus/` arayüzlerine (`hk_i2c_bus_t`, `hk_spi_bus_t`, `hk_uart
 | Sürücü | Bağımlılık | Durum |
 |---|---|---|
 | `sht4x` | yok (saf + bus) | ✅ tam; `hk_sht4x_parse` host-testli |
-| `bmp280` | yok (register-level + bus + hk_time) | ✅ tam (forced mode, datasheet-birebir kompanzasyon testli) |
+| `bmp581` | yok (register-level + bus + hk_time) | ✅ tam (forced mode; on-chip lineerleştirme → kompanzasyon yok, ölçek `raw/2^16` °C ve `raw/2^6` Pa) |
 | `bmp581` | yok | 📦 rev-1 referansı; rev-2 kartta kullanılmıyor |
 | `gps_ublox` (`nmea`) | yok (saf + uart) | ✅ tam; NMEA parser host-testli |
 | `bmi270` | Bosch BMI270_SensorAPI (**vendored**: `bmi270/vendor/`, v2.86.1) | ✅ sarmalayıcı + vendor CI'da derleniyor ve register-map mock ile testli |
@@ -26,7 +26,7 @@ CubeIDE tarafında yapılacaklar:
 Tanımlanmazsa `bmi270_drv.c` stub'a düşer (`HK_ERR_NOT_FOUND`) ve firmware yine derlenir; IMU verisi gelmez.
 
 ## Notlar
-- I2C1'de BMI270 (0x68) + BMP280 (0x76) paylaşımlı → bus mutex'ini `i2c_hw` sağlar.
+- I2C1'de BMI270 (0x68) + BMP581 (0x46) paylaşımlı → bus mutex'ini `i2c_hw` sağlar.
 - SHT4x sabit adresli (0x44); iki örnek ayrı bus'larda (I2C2 + bit-bang). Bkz. `board_config.h`.
 - SD kart: `sd_spi` + FatFs + `services/storage`; kart yoksa sistem **degraded** loglamayla çalışmaya devam eder.
 - ⚠️ İlk bring-up'ta **I2C1 pull-up** doğrulaması (`hk_i2c_scan`) şart.
