@@ -54,6 +54,15 @@ typedef struct {
 
 void               hk_state_init(void);
 
+#if !defined(HK_HOST)
+/* Create the state mutex. Call after hk_state_init() and immediately before
+ * the scheduler starts -- NOT from hk_app_init(): a FreeRTOS critical section
+ * taken while uxCriticalNesting still holds its 0xAAAAAAAA sentinel masks
+ * interrupts permanently, freezing the HAL tick and every HAL timeout.
+ * Until this runs, the accessors below simply skip locking (single-threaded). */
+void               hk_state_rtos_init(void);
+#endif
+
 /* Snapshot for readers (telemetry, mission): locks, copies, unlocks. */
 void               hk_state_get(hk_system_state_t *out);
 

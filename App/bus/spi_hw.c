@@ -130,10 +130,7 @@ hk_status_t hk_spi_hw_init(hk_spi_hw_t *self, hk_spi_bus_t *bus,
     self->pclk_hz    = pclk_hz;
     self->cs_port    = cs_port;
     self->cs_pin     = cs_pin;
-    self->mutex      = xSemaphoreCreateMutex();
-    if (self->mutex == NULL) {
-        return HK_ERR;
-    }
+    self->mutex      = NULL;   /* created by hk_spi_hw_rtos_init() */
 
     bus->ctx       = self;
     bus->xfer      = op_xfer;
@@ -142,6 +139,15 @@ hk_status_t hk_spi_hw_init(hk_spi_hw_t *self, hk_spi_bus_t *bus,
 
     HAL_GPIO_WritePin(cs_port, cs_pin, GPIO_PIN_SET);   /* CS released */
     return HK_OK;
+}
+
+
+/* See hk_i2c_hw_rtos_init(): created just before the scheduler starts. */
+hk_status_t hk_spi_hw_rtos_init(hk_spi_hw_t *self)
+{
+    if (self == NULL) { return HK_ERR_PARAM; }
+    self->mutex = xSemaphoreCreateMutex();
+    return (self->mutex == NULL) ? HK_ERR : HK_OK;
 }
 
 #endif /* !HK_HOST */

@@ -389,6 +389,21 @@ static void task_health(void *arg)
 
 void hk_app_start(void)
 {
+    /* Concurrency objects are created HERE, not in hk_app_init(). Any FreeRTOS
+     * API call takes a critical section, and before the scheduler exists
+     * uxCriticalNesting still holds its 0xAAAAAAAA sentinel -- so the matching
+     * exit never reaches zero and never unmasks interrupts. hk_app_init() does
+     * SD and I2C I/O whose HAL timeouts are measured with the tick interrupt,
+     * so masking it there hangs the boot forever (found on the first board,
+     * 2026-08-01). From here on the scheduler is a few instructions away and
+     * clears the nesting count itself. */
+    (void)hk_state_rtos_init();
+    (void)hk_i2c_hw_rtos_init(&g_app.i2c1_hw);
+    (void)hk_i2c_hw_rtos_init(&g_app.i2c2_hw);
+    (void)hk_i2c_sw_rtos_init(&g_app.swi2c_hw);
+    (void)hk_spi_hw_rtos_init(&g_app.spi1_hw);
+    (void)hk_uart_dma_rtos_init(&g_app.gps_uart_dma);
+
     xTaskCreate(task_imu,     "imu",     HK_STACK_IMU,     NULL, HK_PRIO_IMU,     NULL);
     xTaskCreate(task_env,     "env",     HK_STACK_ENV,     NULL, HK_PRIO_ENV,     NULL);
     xTaskCreate(task_gps,     "gps",     HK_STACK_GPS,     NULL, HK_PRIO_GPS,     NULL);

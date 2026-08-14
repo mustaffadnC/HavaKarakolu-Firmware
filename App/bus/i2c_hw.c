@@ -166,10 +166,7 @@ hk_status_t hk_i2c_hw_init(hk_i2c_hw_t *self, hk_i2c_bus_t *bus,
     self->scl_pin    = scl_pin;
     self->sda_port   = sda_port;
     self->sda_pin    = sda_pin;
-    self->mutex      = xSemaphoreCreateMutex();
-    if (self->mutex == NULL) {
-        return HK_ERR;
-    }
+    self->mutex      = NULL;   /* created by hk_i2c_hw_rtos_init() */
 
     bus->ctx        = self;
     bus->write      = op_write;
@@ -178,6 +175,18 @@ hk_status_t hk_i2c_hw_init(hk_i2c_hw_t *self, hk_i2c_bus_t *bus,
     bus->probe      = op_probe;
     bus->recover    = op_recover;
     return HK_OK;
+}
+
+
+/* Create the bus mutex. MUST be called after hk_i2c_hw_init() and before
+ * the scheduler starts -- never from hk_app_init(), where a FreeRTOS
+ * critical section would mask interrupts with no scheduler to unmask
+ * them again (uxCriticalNesting is still its 0xAAAAAAAA sentinel). */
+hk_status_t hk_i2c_hw_rtos_init(hk_i2c_hw_t *self)
+{
+    if (self == NULL) { return HK_ERR_PARAM; }
+    self->mutex = xSemaphoreCreateMutex();
+    return (self->mutex == NULL) ? HK_ERR : HK_OK;
 }
 
 #endif /* !HK_HOST */

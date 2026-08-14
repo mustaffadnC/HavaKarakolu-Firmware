@@ -95,10 +95,7 @@ hk_status_t hk_uart_dma_init(hk_uart_dma_t *self, hk_uart_t *uart,
     self->dma_cap       = dma_cap;
     self->last_pos      = 0U;
     self->tx_timeout_ms = (tx_timeout_ms == 0) ? 100U : tx_timeout_ms;
-    self->tx_mutex      = xSemaphoreCreateMutex();
-    if (self->tx_mutex == NULL) {
-        return HK_ERR;
-    }
+    self->tx_mutex      = NULL; /* created by hk_uart_dma_rtos_init() */
 
     register_instance(self);
 
@@ -126,6 +123,15 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
             return;
         }
     }
+}
+
+
+/* See hk_i2c_hw_rtos_init(): created just before the scheduler starts. */
+hk_status_t hk_uart_dma_rtos_init(hk_uart_dma_t *self)
+{
+    if (self == NULL) { return HK_ERR_PARAM; }
+    self->tx_mutex = xSemaphoreCreateMutex();
+    return (self->tx_mutex == NULL) ? HK_ERR : HK_OK;
 }
 
 #endif /* !HK_HOST */

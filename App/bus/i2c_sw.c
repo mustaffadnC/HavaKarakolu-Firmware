@@ -208,8 +208,7 @@ hk_status_t hk_i2c_sw_init(hk_i2c_sw_t *self, hk_i2c_bus_t *bus,
     self->sda_port       = sda_port;
     self->sda_pin        = sda_pin;
     self->half_period_us = (half_period_us == 0) ? 5U : half_period_us;
-    self->mutex          = xSemaphoreCreateMutex();
-    if (self->mutex == NULL) { return HK_ERR; }
+    self->mutex          = NULL;  /* created by hk_i2c_sw_rtos_init() */
 
     /* idle bus high */
     scl_release(self);
@@ -222,6 +221,16 @@ hk_status_t hk_i2c_sw_init(hk_i2c_sw_t *self, hk_i2c_bus_t *bus,
     bus->probe      = op_probe;
     bus->recover    = NULL;
     return HK_OK;
+}
+
+
+/* See hk_i2c_hw_rtos_init(): pre-scheduler FreeRTOS calls leave interrupts
+ * masked, so the mutex is created separately, just before the scheduler. */
+hk_status_t hk_i2c_sw_rtos_init(hk_i2c_sw_t *self)
+{
+    if (self == NULL) { return HK_ERR_PARAM; }
+    self->mutex = xSemaphoreCreateMutex();
+    return (self->mutex == NULL) ? HK_ERR : HK_OK;
 }
 
 #endif /* !HK_HOST */

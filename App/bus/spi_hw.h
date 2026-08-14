@@ -34,6 +34,9 @@ hk_status_t hk_spi_hw_init(hk_spi_hw_t *self, hk_spi_bus_t *bus,
                            uint32_t pclk_hz,
                            GPIO_TypeDef *cs_port, uint16_t cs_pin);
 
+
+hk_status_t hk_spi_hw_rtos_init(hk_spi_hw_t *self);
+
 #ifdef __cplusplus
 }
 #endif

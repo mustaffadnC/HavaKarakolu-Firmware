@@ -43,6 +43,9 @@ hk_status_t hk_uart_dma_init(hk_uart_dma_t *self, hk_uart_t *uart,
 /* Call from HAL_UARTEx_RxEventCallback (dispatcher does this automatically). */
 void hk_uart_dma_on_rx_event(hk_uart_dma_t *self, size_t pos);
 
+
+hk_status_t hk_uart_dma_rtos_init(hk_uart_dma_t *self);
+
 #ifdef __cplusplus
 }
 #endif

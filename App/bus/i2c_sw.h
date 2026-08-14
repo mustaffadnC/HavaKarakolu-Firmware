@@ -31,6 +31,9 @@ hk_status_t hk_i2c_sw_init(hk_i2c_sw_t *self, hk_i2c_bus_t *bus,
                            GPIO_TypeDef *sda_port, uint16_t sda_pin,
                            uint32_t half_period_us);
 
+
+hk_status_t hk_i2c_sw_rtos_init(hk_i2c_sw_t *self);
+
 #ifdef __cplusplus
 }
 #endif
