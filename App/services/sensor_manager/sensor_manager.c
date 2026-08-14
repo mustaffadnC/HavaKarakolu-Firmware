@@ -22,14 +22,28 @@ hk_status_t hk_sensors_init(hk_sensor_mgr_t *m,
     hk_deriv_lpf_init(&m->vspeed, 0.3f);
 
     hk_status_t bmp = hk_bmp581_init(&m->bmp, i2c_main, HK_ADDR_BMP581);
+    hk_status_t imu = hk_bmi270_init(&m->imu, i2c_main, HK_ADDR_BMI270);
+
+    /* Every device on this bus silent at once usually means the bus itself is
+     * stuck, not that the parts are missing: a slave interrupted mid-byte
+     * keeps SDA pulled down forever and the master then sees an idle-looking
+     * line it can never drive. The standard escape is to clock SCL until the
+     * slave finishes its byte and releases SDA, so do that once and retry
+     * before believing the sensors are absent. Observed on the first board,
+     * 2026-08-01: SDA on I2C1 low at boot with the arbitration-lost flag set. */
+    if (bmp != HK_OK && imu != HK_OK && i2c_main->recover != NULL) {
+        HK_LOGW("sensors", "i2c_main silent; clearing bus and retrying");
+        i2c_main->recover(i2c_main->ctx);
+        bmp = hk_bmp581_init(&m->bmp, i2c_main, HK_ADDR_BMP581);
+        imu = hk_bmi270_init(&m->imu, i2c_main, HK_ADDR_BMI270);
+    }
+
     hk_state_set_sensor_ok(HK_SENSOR_BARO, bmp == HK_OK);
+    hk_state_set_sensor_ok(HK_SENSOR_BMI270, imu == HK_OK);
 
     (void)hk_sht4x_init(&m->sht1, i2c_sht1, HK_ADDR_SHT4X, "SHT1");
     (void)hk_sht4x_init(&m->sht2, i2c_sht2, HK_ADDR_SHT4X, "SHT2");
     /* presence confirmed at first successful read */
-
-    hk_status_t imu = hk_bmi270_init(&m->imu, i2c_main, HK_ADDR_BMI270);
-    hk_state_set_sensor_ok(HK_SENSOR_BMI270, imu == HK_OK);
 
     HK_LOGI("sensors", "bmp=%s imu=%s", hk_status_str(bmp), hk_status_str(imu));
     return HK_OK;
