@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Continuing on a fresh machine?** Read `docs/DEVIR-TESLIM.md` first — it has
+> from-zero tool installation, how to rebuild the out-of-repo CubeMX project,
+> flashing/memory-read commands, and the live hardware bring-up status.
+
 ## Project
 
 Ülgen ÇARGE capsule firmware: STM32F407VGTx, FreeRTOS (CMSIS-RTOS v2), C11.

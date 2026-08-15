@@ -7,7 +7,12 @@ STM32F407VGTx tabanlı modüler kapsül kartının gömülü yazılımı. Kapsü
 - **Araç zinciri:** STM32CubeIDE + CubeMX (HAL). Host birim testleri için gcc + CMake.
 - **Veri çıkışı:** SD kart (SPI1 + FatFs). Telemetri radyosu yok.
 
-> Donanım rev-2 pin haritasının tek doğru kaynağı: `App/bsp/board_config.h`
+> 🆕 **Yeni bir bilgisayardan devam edecekseniz önce bunu okuyun:**
+> **[`docs/DEVIR-TESLIM.md`](docs/DEVIR-TESLIM.md)** — sıfırdan kurulum (hiçbir
+> program kurulu olmayan makine için), CubeMX projesinin yeniden kurulması,
+> karta yükleme komutları, devreye alma durumu ve açık sorunlar.
+>
+> Donanım pin haritasının tek doğru kaynağı: `App/bsp/board_config.h`
 > Elektronik ekibine açık sorular: `docs/ee-questions.md`
 
 ---
