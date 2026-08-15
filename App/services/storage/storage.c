@@ -339,7 +339,9 @@ static void fs_failed(hk_storage_t *s)
 
 static bool try_mount(hk_storage_t *s, uint32_t now_ms)
 {
-    if (f_mount(&s->fs, "", 1) != FR_OK) {
+    FRESULT mr = f_mount(&s->fs, "", 1);
+    s->last_mount_err = (uint8_t)mr;   /* kept so the caller can report WHY */
+    if (mr != FR_OK) {
         return false;
     }
     s->mounted = true;

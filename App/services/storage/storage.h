@@ -119,6 +119,12 @@ typedef struct {
     uint32_t dropped;         /* records lost to a full queue      */
     uint32_t write_errors;
     uint32_t records_written;
+    uint8_t  last_mount_err;  /* FRESULT of the last f_mount attempt. The board
+                                 has no console, so this is how a mount failure
+                                 is told apart over SWD/the log ring: 1 disk
+                                 error (SPI/card comms), 3 not ready (card did
+                                 not initialise), 13 no filesystem (card is not
+                                 FAT16/FAT32 -- exFAT is disabled in ffconf.h). */
 } hk_storage_t;
 
 /* No filesystem access here: wires the queue (capacity power of two). */
