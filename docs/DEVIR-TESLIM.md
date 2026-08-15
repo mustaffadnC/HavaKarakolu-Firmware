@@ -810,6 +810,39 @@ ENV,313212, ATTACHED, t1=31.96, rh1=22.4, t2=31.74, rh2=22.5, vbat=12.21, soc=0.
 
 Kartın kendi yazdığı `.CSV` (565 satır) çözülen `.BIN` ile birebir aynı.
 
+> 🔴 **Sonraki koşuda çıkan iki sorun (2026-08-15 akşamı).** Kart dışarıda,
+> 12 V ile çalışırken:
+>
+> ```
+> [I/storage] SD mounted, session FL_0003
+> [W/storage] SD unavailable (degraded), mount_err=0 err=1 drop=0
+> [W/storage] SD unavailable (degraded), mount_err=1 err=1 drop=0
+> records_written = 4457 (donmuş)   dropped = 4282 -> 4309 (hızla artıyor)
+> ```
+>
+> **(a) Hat 2,625 MHz'de hâlâ marjinal.** 4457 kayıttan sonra bir yazma hatası
+> geldi. Bir önceki koşu 7874 kaydı hatasız yazmıştı, yani sorun aralıklı.
+> `HK_SD_DATA_HZ` bir kademe daha düşürüldü: **2,625 MHz → 1,3125 MHz**
+> (84 MHz / 64). Kayıt ~1 KB/sn istiyor, 1,3 MHz'de ~160 KB/sn var; yavaşlatmak
+> bedava.
+>
+> **(b) Asıl hata: geçici bir hatadan sonra SD BİR DAHA açılmıyor.**
+> `disk_initialize()` yalnızca `!sd->ready` ise `hk_sd_init()` çağırıyordu, ama
+> yazma hatasında `ready` bayrağını hiçbir yer temizlemiyordu. Sonuç:
+> `fs_failed()` unmount ediyor, sonraki `f_mount` kart init'ini **atlıyor**,
+> FatFs açılış sektörünü okuyamıyor ve her deneme `FR_DISK_ERR` dönüyor —
+> sonsuza kadar. Yani **tek bir geçici arıza, kaydı kalıcı olarak öldürüyordu.**
+>
+> Düzeltme: `disk_read`/`disk_write` başarısız olduğunda `sd->ready = false`
+> yapılıyor, böylece sonraki mount kart init dizisini gerçekten yeniden
+> çalıştırıyor. Uçuş kapsülü için kritik: bir sarsıntı ya da anlık temassızlık
+> artık tüm uçuşun kaydını götürmüyor.
+>
+> ⚠️ **Bu iki değişiklik henüz donanımda doğrulanmadı** (0 uyarı, 13/13 host
+> testi geçiyor). Sonraki oturumun ilk işi: yükle, birkaç dakika kaydettir,
+> `records_written` artmaya devam ediyor mu ve bir hata olursa toparlanıyor mu
+> diye bak.
+
 > 🟡 **Küçük boşluk:** `SELFTEST -> ATTACHED` geçişi RAM logunda görünüyor ama
 > `.BIN` içinde EVENT kaydı olarak **yok**. Sebep: SD ancak `t=35301`'de mount
 > oluyor, o ana kadar kayıt kuyruğu doluyor ve taşan kayıtlar atılıyor
