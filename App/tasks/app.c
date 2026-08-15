@@ -10,6 +10,7 @@
 #include "task.h"
 
 #include "bsp/board_config.h"
+#include "bsp/log_ram.h"
 #include "common/hk_time.h"
 #include "common/log.h"
 #include "services/health/health.h"
@@ -37,8 +38,24 @@ static void storage_unlock(void *arg) { (void)arg; taskEXIT_CRITICAL(); }
 
 void hk_app_init(void)
 {
+    /* First thing: give the log facade somewhere to go. Until this runs every
+     * HK_LOG* call is silently dropped, and this board has no debug UART and no
+     * telemetry, so the SWD-readable ring is the only voice it has. */
+    hk_log_ram_init();
+    hk_log_init(hk_log_ram_sink, HK_LOG_INFO);
+
     hk_time_init();
     hk_state_init();
+
+#if HK_DIAG_BUZZER_ALWAYS
+    /* Start the diagnostic tone before anything else touches the hardware, so
+     * a hang further down init (e.g. on the stuck I2C1 bus) cannot keep it
+     * silent. TIM3/ADC1 get re-initialised below; the tone is restarted there. */
+    (void)hk_bsp_tim3_adc1_init();
+    hk_buzzer_init(&g_app.buzzer, &HK_BUZZER_TIM_HANDLE, HK_BUZZER_TIM_CHANNEL,
+                   HK_BUZZER_TIMER_CLK_HZ);
+    (void)hk_buzzer_tone(&g_app.buzzer, HK_DIAG_BUZZER_FREQ_HZ);
+#endif
 
     /* buses */
     hk_i2c_hw_init(&g_app.i2c1_hw, &g_app.i2c1, &hi2c1, 50,
@@ -111,6 +128,12 @@ void hk_app_init(void)
                   HK_SERVO_MIN_US, HK_SERVO_MAX_US);
     hk_buzzer_init(&g_app.buzzer, &HK_BUZZER_TIM_HANDLE, HK_BUZZER_TIM_CHANNEL,
                    HK_BUZZER_TIMER_CLK_HZ);
+#if HK_DIAG_BUZZER_ALWAYS
+    /* hk_bsp_tim3_adc1_init() just reprogrammed TIM3 and zeroed the compare
+     * register, so restart the diagnostic tone from a known state. */
+    hk_buzzer_off(&g_app.buzzer);
+    (void)hk_buzzer_tone(&g_app.buzzer, HK_DIAG_BUZZER_FREQ_HZ);
+#endif
     hk_fan_init(&g_app.fan1, HK_FAN1_GPIO_PORT, HK_FAN1_GPIO_PIN, true);
     hk_fan_init(&g_app.fan2, HK_FAN2_GPIO_PORT, HK_FAN2_GPIO_PIN, true);
     /* Solenoid is normally-closed (EE answer S3): DE-ENERGIZED = LOCKED.
@@ -278,22 +301,36 @@ static void task_storage(void *arg)
 {
     (void)arg;
     TickType_t last = xTaskGetTickCount();
-    bool mounted_shown = false;
+    /* Report the FIRST observation too, not just later changes: a card that
+     * never mounts leaves `mounted` at its initial false forever, so a
+     * change-only report stays silent exactly when something is wrong. That
+     * silence cost a bring-up session -- see docs/DEVIR-TESLIM.md 8.8. */
+    bool    mounted_shown = false;
+    bool    first_report  = true;
+    uint8_t err_shown     = 0u;
+
     for (;;) {
         hk_storage_service(&g_app.storage, hk_millis());
 
-        bool mounted = hk_storage_mounted(&g_app.storage);
+        bool    mounted   = hk_storage_mounted(&g_app.storage);
+        uint8_t mount_err = g_app.storage.last_mount_err;
         hk_state_set_sensor_ok(HK_SENSOR_SD, mounted);
-        if (mounted != mounted_shown) {
+
+        if (first_report || mounted != mounted_shown ||
+            (!mounted && mount_err != err_shown)) {
             if (mounted) {
                 HK_LOGI("storage", "SD mounted, session FL_%04u",
                         (unsigned)g_app.storage.session);
             } else {
-                HK_LOGW("storage", "SD unavailable (degraded), err=%lu drop=%lu",
+                HK_LOGW("storage",
+                        "SD unavailable (degraded), mount_err=%u err=%lu drop=%lu",
+                        (unsigned)mount_err,
                         (unsigned long)g_app.storage.write_errors,
                         (unsigned long)g_app.storage.dropped);
             }
             mounted_shown = mounted;
+            err_shown     = mount_err;
+            first_report  = false;
         }
 
         hk_health_kick(HK_TASK_STORAGE);
@@ -301,6 +338,7 @@ static void task_storage(void *arg)
     }
 }
 
+#if !HK_DIAG_BUZZER_ALWAYS
 /* Buzzer pattern table, one row per hk_buzzer_pattern_t. Tick = control
  * period (100 ms): tone plays for on_ticks out of every period_ticks. */
 static const struct {
@@ -315,9 +353,19 @@ static const struct {
     [HK_BUZZ_LANDED]   = { 2000, 2, 10 },
     [HK_BUZZ_RECOVERY] = { 3500, 5, 10 },
 };
+#endif /* !HK_DIAG_BUZZER_ALWAYS */
 
 static void buzzer_play(uint8_t pattern, uint32_t tick)
 {
+#if HK_DIAG_BUZZER_ALWAYS
+    /* Diagnostic mode: hold the continuous tone, ignore mission patterns. */
+    (void)pattern;
+    (void)tick;
+    if (!g_app.buzzer.playing) {
+        (void)hk_buzzer_tone(&g_app.buzzer, HK_DIAG_BUZZER_FREQ_HZ);
+    }
+    return;
+#else
     if (pattern >= (sizeof(k_buzz) / sizeof(k_buzz[0]))) {
         pattern = HK_BUZZ_OFF;
     }
@@ -328,6 +376,7 @@ static void buzzer_play(uint8_t pattern, uint32_t tick)
     } else {
         hk_buzzer_off(&g_app.buzzer);
     }
+#endif /* HK_DIAG_BUZZER_ALWAYS */
 }
 
 static void task_control(void *arg)
@@ -375,10 +424,31 @@ static void task_health(void *arg)
 {
     (void)arg;
     TickType_t last = xTaskGetTickCount();
+
+    /* Report a missing task only once it has persisted for HK_HEALTH_WARN_PASSES
+     * passes, and report the recovery once. A slower-than-health-period task is
+     * missing on most passes by construction, so per-pass logging says nothing
+     * and costs the whole log ring -- see HK_HEALTH_WARN_PASSES. */
+    uint32_t stuck_mask   = 0u;
+    uint32_t stuck_passes = 0u;
+    bool     warned       = false;
+
     for (;;) {
         uint32_t missing = hk_health_service();
-        if (missing != 0u) {
+
+        if (missing != 0u && missing == stuck_mask) {
+            ++stuck_passes;
+        } else {
+            stuck_mask   = missing;
+            stuck_passes = (missing != 0u) ? 1u : 0u;
+        }
+
+        if (stuck_passes == HK_HEALTH_WARN_PASSES) {
             HK_LOGW("health", "tasks not alive, mask=0x%02lX", (unsigned long)missing);
+            warned = true;
+        } else if (missing == 0u && warned) {
+            HK_LOGI("health", "all tasks alive again");
+            warned = false;
         }
         hk_system_state_t *s = hk_state_lock();
         s->uptime_ms = hk_millis();
