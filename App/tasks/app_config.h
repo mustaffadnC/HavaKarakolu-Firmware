@@ -46,9 +46,12 @@
  * 5 V Arduino-style module could not sustain: the first f_mount succeeded (so
  * the card and its FAT filesystem are fine) but the very next write failed and
  * every retry then came back FR_DISK_ERR -- see docs/DEVIR-TESLIM.md 8.8.
- * 84 MHz / 32 leaves plenty of margin for the module's level shifter and the
- * jumper wiring. Raise it again only with a logic analyser on the bus. */
-#define HK_SD_DATA_HZ           2625000u   /* 84 MHz / 32 */
+ * 84 MHz / 32 fixed the mount but the link stayed marginal: a later run wrote
+ * 4457 records and then hit a write error, so this drops another notch to
+ * 84 MHz / 64. There is bandwidth to spare either way -- logging needs about
+ * 1 KB/s against roughly 160 KB/s here -- so slow is free.
+ * Raise it again only with a logic analyser on the bus. */
+#define HK_SD_DATA_HZ           1312500u   /* 84 MHz / 64 */
 #define HK_SD_INIT_TIMEOUT_MS   250
 #define HK_FW_VERSION           0x0200 /* 2.0 = rev-2 board bring-up line */
 #define HK_GPS_LOG_DIVIDER      20     /* gps task ticks per logged fix (1 Hz) */

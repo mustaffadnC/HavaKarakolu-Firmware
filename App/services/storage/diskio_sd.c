@@ -26,6 +26,14 @@ DSTATUS disk_status(BYTE pdrv)
     return s_sd->ready ? 0 : STA_NOINIT;
 }
 
+/*
+ * A failed transfer clears sd->ready so this re-runs the card init sequence.
+ * Without that the storage service could never recover: a single write error
+ * unmounts the volume, but the card object still looked ready, so every retry
+ * skipped hk_sd_init() and f_mount kept returning FR_DISK_ERR forever.
+ * Observed on hardware 2026-08-15 -- logging stopped after 4457 records and
+ * never came back. See docs/DEVIR-TESLIM.md 8.8.
+ */
 DSTATUS disk_initialize(BYTE pdrv)
 {
     if (pdrv != 0 || s_sd == NULL) {
@@ -47,6 +55,7 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, LBA_t sector, UINT count)
     for (UINT i = 0; i < count; ++i) {
         if (hk_sd_read_block(s_sd, (uint32_t)sector + i,
                              buff + (size_t)i * HK_SD_BLOCK_SIZE) != HK_OK) {
+            s_sd->ready = false;   /* force a card re-init on the next mount */
             return RES_ERROR;
         }
     }
@@ -61,6 +70,7 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, LBA_t sector, UINT count)
     for (UINT i = 0; i < count; ++i) {
         if (hk_sd_write_block(s_sd, (uint32_t)sector + i,
                               buff + (size_t)i * HK_SD_BLOCK_SIZE) != HK_OK) {
+            s_sd->ready = false;   /* force a card re-init on the next mount */
             return RES_ERROR;
         }
     }
