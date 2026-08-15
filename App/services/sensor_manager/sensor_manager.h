@@ -20,6 +20,19 @@ extern "C" {
  * i2c_sht2) and the attitude filter. Sampling functions read the devices and
  * publish into system_state. GPS and battery are driven by their own tasks.
  */
+/*
+ * How long a silent device is left alone before the next probe.
+ *
+ * Without a backoff every sample of an absent device costs one blocking HAL
+ * bus timeout. At the IMU task's 100 Hz that single 50 ms timeout is longer
+ * than the 10 ms period, so vTaskDelayUntil() never actually sleeps, the
+ * priority-3 task holds the CPU, and every task below it starves. Measured on
+ * hardware 2026-08-15 with the I2C1 SDA fault: of the five monitored tasks
+ * only IMU and MISSION (both priority 3) were still kicking the health
+ * service, so hk_health_service() never refreshed the IWDG.
+ */
+#define HK_SENSOR_RETRY_MS 2000u
+
 typedef struct {
     hk_bmp581_t      bmp;
     hk_sht4x_t       sht1;
@@ -28,6 +41,12 @@ typedef struct {
     hk_comp_filter_t attitude;
     hk_deriv_lpf_t   vspeed;      /* d(alt)/dt at the env task rate */
     float            baro_ref_pa;
+
+    /* hk_millis() value from which each device may be probed again. */
+    uint32_t         bmp_retry_at_ms;
+    uint32_t         imu_retry_at_ms;
+    uint32_t         sht1_retry_at_ms;
+    uint32_t         sht2_retry_at_ms;
 } hk_sensor_mgr_t;
 
 /* Initialise all I2C sensors; sets sensor_ok flags in system_state.
